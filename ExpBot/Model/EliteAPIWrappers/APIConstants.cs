@@ -7,6 +7,102 @@ namespace ExpBot.Model.EliteAPIWrappers
 {
     public class APIConstants
     {
+        #region Inventory Containers
+        public enum ContainerId
+        {
+            Items = 0,
+            MogSafe = 1,
+            Storage = 2,
+            MogLocker = 4,
+            MogSatchel = 5,
+            MogSack = 6,
+            MogCase = 7,
+            MogWardrobe = 8,
+            MogSafe2 = 9,
+            MogWardrobe2 = 10
+            // TODO: MogWardrobe3 - probably 11?
+            // TODO: MogWardrobe4 - probably 12?
+        }
+        #endregion
+        #region Status Effects
+        public enum StatusEffect
+        {
+            Paralyze = 4,
+            Poison = 3,
+            Blind = 5,
+            Silence = 6,
+            Disease = 8,
+            Curse = 9,
+            Bind = 11,
+            Gravity = 12,
+            Slow = 13,
+            Bane = 30,
+            Plague = 31,
+            Haste = 33,
+            BlazeSpikes = 34,
+            IceSpikes = 35,
+            Blink = 36,
+            Stoneskin = 37,
+            Aquaveil = 39,
+            Protect = 40,
+            Shell = 41,
+            Regen = 42,
+            Refresh = 43,
+            Ìnvisible = 69,
+            Deodorize = 70,
+            Sneak = 71,
+            Enfire = 94,
+            Enblizzard = 95,
+            Enaero = 96,
+            Enstone = 97,
+            Enthunder = 98,
+            Enwater = 99,
+            Barfire = 100,
+            Barblizzard = 101,
+            Baraero = 102,
+            Barstone = 103,
+            Barthunder = 104,
+            Barwater = 105,
+            Barsleep = 106,
+            Barpoison = 107,
+            Barparalyze = 108,
+            Barblind = 109,
+            Barsilence = 110,
+            Barpetrify = 111,
+            Barvirus = 112,
+            Phalanx = 116,
+            Burn = 128,
+            Frost = 129,
+            Choke = 130,
+            Rasp = 131,
+            Shock = 132,
+            Drown = 133,
+            Dia = 134,
+            Bio = 135,
+            STRDown = 136,
+            DEXDown = 137,
+            VITDown = 138,
+            AGIDown = 139,
+            INTDown = 140,
+            MNDDown = 141,
+            CHRDown = 142,
+            HPDown = 144,
+            MPDown = 145,
+            ACCDown = 146,
+            ATTDown = 147,
+            EVADown = 148,
+            DEFDown = 149,
+            MDEFDown = 167,
+            MACCDown = 174,
+            MATTDown = 175,
+            Helix = 186,
+            TPDown = 189,
+            Food = 251,
+            Signet = 253,
+            MEVADown = 404,
+            Flurry = 581
+        }
+        #endregion
         #region Player Status'
         public enum PlayerStatus
         {

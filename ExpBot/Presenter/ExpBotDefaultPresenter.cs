@@ -27,6 +27,11 @@ namespace ExpBot.ViewModel
             polProcessMonitorThread.IsBackground = true;
             polProcessMonitorThread.Start();
         }
+        public void Close()
+        {
+            ExpScript.running = false;
+            model.Unload();
+        }
         public bool StartStopBot()
         {
             ExpScript script;
@@ -40,6 +45,7 @@ namespace ExpBot.ViewModel
             }
             else
             {
+                model.Unload();
                 return ExpScript.running = false;
             }
         }

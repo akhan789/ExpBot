@@ -10,6 +10,7 @@ namespace ExpBot.ViewModel
     public interface IExpBotPresenter
     {
         void OnLoad();
+        void Close();
         bool StartStopBot();
         void Initialise(Process process);
         bool Initialised { get; set; }

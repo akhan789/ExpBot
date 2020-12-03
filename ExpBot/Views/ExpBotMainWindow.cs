@@ -37,8 +37,15 @@ namespace ExpBot.Views
             presenter.OnLoad();
         }
 
+        private void ExpBotMainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            presenter.Close();
+            Application.Exit();
+        }
+
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            presenter.Close();
             Application.Exit();
         }
 
@@ -61,7 +68,8 @@ namespace ExpBot.Views
             {
                 btnStartStop.Text = "Stop";
             }
-            else {
+            else
+            {
                 btnStartStop.Text = "Start";
             }
         }

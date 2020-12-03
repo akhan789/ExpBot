@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using static EliteMMO.API.EliteAPI;
+using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.Scripts
 {
@@ -31,6 +32,7 @@ namespace ExpBot.Scripts
         {
             while (ExpScript.running)
             {
+                //player.SendAttack();
                 //Console.WriteLine("Player status: " + player.Status.ToString());
                 //Console.WriteLine("Target Id: " + target.TargetId);
                 //Console.WriteLine("Target name: " + target.TargetName);
@@ -44,45 +46,52 @@ namespace ExpBot.Scripts
                 //    Console.WriteLine("Party Member.HP: " + member.CurrentHP);
                 //    Console.WriteLine("Party Member.Active: " + member.Active);
                 //}
-                List<IItem> sortedItems = new List<IItem>();
-                for (uint i = 0; i <= 50000; i++)
-                {
-                    IItem item = player.Item(i);
-                    if (item != null)
-                    {
-                        sortedItems.Add(item);
-                    }
-                }
-                sortedItems.Sort((a, b) => a.ItemID.CompareTo(b.ItemID));
 
-                int x = 1;
-                foreach (IItem item in sortedItems)
-                {
-                    string name = item.Name[0];
-                    if (name.Length == 0 || name == ".")
-                    {
-                        //Console.WriteLine("RESERVED" + x.ToString() + " = " + item.ItemID + ",");
-                        x++;
-                    }
-                    else
-                    {
-                        Console.WriteLine(name + " = " + item.ItemID + ",");
-                    }
-                    //    //Console.WriteLine("Ability ID: " + ability.ID);
-                    //    //Console.WriteLine("Ability Name0: " + ability.Name[0]);
-                    //    //Console.WriteLine("Ability Name1: " + ability.Name[1]);
-                    //    //Console.WriteLine("Ability Name2: " + ability.Name[2]);
-                    //    //Console.WriteLine("Ability Description: " + ability.Description);
-                    //    //Console.WriteLine("Ability MP: " + ability.MP);
-                    //    //Console.WriteLine("Ability TP: " + ability.TP);
-                    //    //Console.WriteLine("Ability Range: " + ability.Range);
-                    //    //Console.WriteLine("Ability MonsterLevel: " + ability.MonsterLevel);
-                    //    //Console.WriteLine("Ability TimerID: " + ability.TimerID);
-                    //    //Console.WriteLine("Ability ValidTargets: " + ability.ValidTargets);
-                    //    //Console.WriteLine("Ability Type: " + ability.Type);
-                    //    //Console.WriteLine("Ability Element: " + ability.Element);
-                    //    //Console.WriteLine(ability.ToString());
-                }
+                //Console.WriteLine("Container contains: "  + player.HasItemInItems(ItemId.MendiEarring));
+                //foreach (short buffId in player.GetBuffs())
+                //{
+                //    Console.WriteLine("Buff Id: " + buffId);
+                //}
+
+                //List<IItem> sortedItems = new List<IItem>();
+                //for (uint i = 0; i <= 50000; i++)
+                //{
+                //    IItem item = player.Item(i);
+                //    if (item != null)
+                //    {
+                //        sortedItems.Add(item);
+                //    }
+                //}
+                //sortedItems.Sort((a, b) => a.ItemID.CompareTo(b.ItemID));
+
+                //int x = 1;
+                //foreach (IItem item in sortedItems)
+                //{
+                //    string name = item.Name[0];
+                //    if (name.Length == 0 || name == ".")
+                //    {
+                //        //Console.WriteLine("RESERVED" + x.ToString() + " = " + item.ItemID + ",");
+                //        x++;
+                //    }
+                //    else
+                //    {
+                //        Console.WriteLine(name + " = " + item.ItemID + ",");
+                //    }
+                //    //Console.WriteLine("Ability ID: " + ability.ID);
+                //    //Console.WriteLine("Ability Name0: " + ability.Name[0]);
+                //    //Console.WriteLine("Ability Name1: " + ability.Name[1]);
+                //    //Console.WriteLine("Ability Name2: " + ability.Name[2]);
+                //    //Console.WriteLine("Ability Description: " + ability.Description);
+                //    //Console.WriteLine("Ability MP: " + ability.MP);
+                //    //Console.WriteLine("Ability TP: " + ability.TP);
+                //    //Console.WriteLine("Ability Range: " + ability.Range);
+                //    //Console.WriteLine("Ability MonsterLevel: " + ability.MonsterLevel);
+                //    //Console.WriteLine("Ability TimerID: " + ability.TimerID);
+                //    //Console.WriteLine("Ability ValidTargets: " + ability.ValidTargets);
+                //    //Console.WriteLine("Ability Type: " + ability.Type);
+                //    //Console.WriteLine("Ability Element: " + ability.Element);
+                //    //Console.WriteLine(ability.ToString());
+                //}
                 Thread.Sleep(2000);
                 ExpScript.running = false;
             }

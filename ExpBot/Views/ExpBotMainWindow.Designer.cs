@@ -1,4 +1,7 @@
 ﻿
+using System;
+using System.Windows.Forms;
+
 namespace ExpBot.Views
 {
     partial class ExpBotMainWindow
@@ -209,6 +212,7 @@ namespace ExpBot.Views
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(624, 261);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ExpBotMainWindow_FormClosed);
             this.Controls.Add(this.expBotMainWindowPanel);
             this.Controls.Add(this.expBotMainWindowMenuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

@@ -45,6 +45,10 @@ namespace ExpBot.Model
             get => currentProcesses;
             set => currentProcesses = value;
         }
+        public void Unload()
+        {
+            api.ThirdParty.SendString("//lua unload ScriptedExtender");
+        }
         protected void InitializeApi()
         {
             if (CurrentPOLProcess != null)
@@ -57,6 +61,7 @@ namespace ExpBot.Model
                 {
                     api.Reinitialize(CurrentPOLProcess.Id);
                 }
+                api.ThirdParty.SendString("//lua load ScriptedExtender");
                 Player = new PlayerWrapper(api);
                 Target = new TargetWrapper(api);
                 Party = new PartyWrapper(api);

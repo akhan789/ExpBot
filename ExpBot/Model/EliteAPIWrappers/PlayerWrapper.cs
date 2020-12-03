@@ -35,9 +35,74 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
             }
         }
-        public IItem Item(uint itemId)
+        public void SendAttack()
         {
-            return api.Resources.GetItem(itemId);
+            api.ThirdParty.SendString("/attack");
+        }
+        public short[] GetBuffs()
+        {
+            return api.Player.Buffs;
+        }
+        public bool HasBuff(short id)
+        {
+            return false;
+        }
+        public bool HasItemInItems(ItemId id)
+        {
+            return HasItem(ContainerId.Items, id);
+        }
+        public bool HasItemInMogSafe(ItemId id)
+        {
+            return HasItem(ContainerId.MogSafe, id);
+        }
+        public bool HasItemInStorage(ItemId id)
+        {
+            return HasItem(ContainerId.Storage, id);
+        }
+        public bool HasItemInMogLocker(ItemId id)
+        {
+            return HasItem(ContainerId.MogLocker, id);
+        }
+        public bool HasItemInMogSatchel(ItemId id)
+        {
+            return HasItem(ContainerId.MogSatchel, id);
+        }
+        public bool HasItemInMogSack(ItemId id)
+        {
+            return HasItem(ContainerId.MogSafe, id);
+        }
+        public bool HasItemInMogCase(ItemId id)
+        {
+            return HasItem(ContainerId.MogCase, id);
+        }
+        public bool HasItemInMogWardrobe(ItemId id)
+        {
+            return HasItem(ContainerId.MogWardrobe, id);
+        }
+        public bool HasItemInMogSafe2(ItemId id)
+        {
+            return HasItem(ContainerId.MogSafe2, id);
+        }
+        public bool HasItemInMogWardrobe2(ItemId id)
+        {
+            return HasItem(ContainerId.MogWardrobe2, id);
+        }
+        public bool HasItem(ContainerId containerId, ItemId itemId)
+        {
+            return ItemQuantity(containerId, itemId) > 0;
+        }
+        public uint ItemQuantity(ContainerId containerId, ItemId itemId)
+        {
+            int currentItemCount = api.Inventory.GetContainerCount((int)containerId);
+            for (int i = 0; i < currentItemCount; i++)
+            {
+                InventoryItem item = api.Inventory.GetContainerItem((int)containerId, i);
+                if (item.Id == (int)itemId)
+                {
+                    return item.Count;
+                }
+            }
+            return 0;
         }
         public bool HasWhiteMagicSpell(WhiteMagicSpellId id)
         {

@@ -11,6 +11,7 @@ namespace ExpBot.Model
     {
         IList<Process> POLProcesses { get; }
         Process CurrentPOLProcess { get; set; }
+        void Unload();
         PlayerWrapper Player { get; set; }
         TargetWrapper Target { get; set; }
         PartyWrapper Party { get; set; }
