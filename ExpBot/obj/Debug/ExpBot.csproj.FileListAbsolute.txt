@@ -1,0 +1,15 @@
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\bin\Debug\Expbot.exe
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\bin\Debug\Expbot.pdb
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\bin\Debug\EliteMMO.API.dll
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\bin\Debug\log4net.dll
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\bin\Debug\Newtonsoft.Json.dll
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\bin\Debug\log4net.xml
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.Properties.Resources.resources
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.Views.ExpBotAboutBox.resources
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.Views.ExpBotMainWindow.resources
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.csproj.GenerateResource.cache
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.csproj.CoreCompileInputs.cache
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.csproj.CopyComplete
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\Expbot.exe
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\Expbot.pdb
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.csprojAssemblyReference.cache
