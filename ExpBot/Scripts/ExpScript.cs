@@ -16,6 +16,8 @@ namespace ExpBot.Scripts
     public class ExpScript
     {
         public static bool running;
+        private bool aggroed = false;
+        private const string EnumMatchingRegex = "[^a-zA-Z0-9]";
         private PlayerWrapper player;
         private TargetWrapper target;
         private PartyWrapper party;
@@ -24,7 +26,6 @@ namespace ExpBot.Scripts
             this.player = player;
             this.target = target;
             this.party = party;
-            this.player.Target = target;
         }
         ~ExpScript()
         {
@@ -32,6 +33,7 @@ namespace ExpBot.Scripts
         }
         public void Run()
         {
+            // Parameters - TODO: Make these all configurable via UI.
             TrustSpellId[] trusts = {
                 TrustSpellId.Gessho,
                 TrustSpellId.ApururuUC,
@@ -39,69 +41,92 @@ namespace ExpBot.Scripts
                 TrustSpellId.Kupofried,
                 TrustSpellId.Selhteus
             };
+            const int HealHP = 90;
+            const double MeleeRange = 3.0d;
             const string MonsterName = "Sinewy Matamata";
-            float startPOSPlayerX = player.X;
-            float startPOSplayerY = player.Y;
-            float startPOSplayerZ = player.Z;
-            float startPOSplayerH = player.H;
-            const string enumMatchingRegex = "[^a-zA-Z0-9]";
+            float initialPlayerX = player.X;
+            float initialPlayerY = player.Y;
+            float initialPlayerZ = player.Z;
+
+            // Start the aggro monitor thread.
+            Thread aggroMonitorThread = new Thread(new ThreadStart(AggroMonitor));
+            aggroMonitorThread.IsBackground = true;
+            aggroMonitorThread.Start();
+
+            // Actual Bot
+            bool isMoving = false;
             while (ExpScript.running)
             {
-                // If in combat already, continue fighting. 
+                player.StopMovingBackward();
+                player.StopMovingForward();
                 switch (player.PlayerStatus)
                 {
                     case (uint)Status.Resting:
-                        player.Heal();
+                        player.Heal(); // Stand back up.
                         goto case (uint)Status.Idle;
                     case (uint)Status.Idle:
-                        // TODO: check we haven't been aggroed whilst we're waiting,
-                        //maybe by checking the monsters around who their target is if possible?
-                        IList<PartyMember> partyMembers;
-                        while (ExpScript.running && (partyMembers = party.PartyMembers)?.Count != 6)
+                        if (IsRunningAndNotAggroed())
                         {
-                            foreach (TrustSpellId trust in trusts)
+                            //player.SetTarget(0);
+                            SummonTrusts(trusts);
+                            // check hp, heal if necessary.
+                            // find target to attack.
+                            // run to target
+                            // attack target
+                            // goto case incombat? or just wait 2000
+                        }
+                        else
+                        {
+                            uint targetId;
+                            if ((targetId = player.GetAggroedTargetId().TargetID) > 0)
                             {
-                                bool alreadySummoned = false;
-                                foreach (PartyMember member in partyMembers)
+                                player.SetTarget((int)targetId);
+                                player.FaceTarget(target);
+                                player.Attack(target);
+                            }
+                        }
+                        break;
+                    case (uint)Status.InCombat:
+                        if (target.HPP > 1)
+                        {
+                            player.FaceTarget(target);
+                            if (target.Distance >= MeleeRange + 0.5d && target.Distance <= MeleeRange - 0.5d)
+                            {
+                                // Within melee range.
+                                player.StopMovingBackward();
+                                player.StopMovingForward();
+                                isMoving = false;
+                            }
+                            else if (target.Distance > MeleeRange + 0.5d)
+                            {
+                                player.StopMovingBackward();
+                                player.MoveForward();
+                                isMoving = true;
+                            }
+                            else if (target.Distance < MeleeRange - 0.5d)
+                            {
+                                player.StopMovingForward();
+                                player.MoveBackward();
+                                isMoving = true;
+                            }
+                            if(!isMoving) { 
+                                if (player.HPP < HealHP)
                                 {
-                                    string memberName = Regex.Replace(member.Name, enumMatchingRegex, "");
-                                    if (memberName.Equals(trust.ToString()))
-                                    {
-                                        alreadySummoned = true;
-                                        break;
-                                    }
-                                }
-                                if (!alreadySummoned)
-                                {
-                                    while (ExpScript.running && player.PlayerStatus != (uint)Status.InCombat && player.GetSpellRecastRemaining((int)trust) != 0)
-                                    {
-                                        Thread.Sleep(100);
-                                    }
-                                    player.CastSpell((uint)trust, "<me>");
-                                    if (party.PartyMembers.Count == 6)
-                                    {
-                                        break;
-                                    }
+                                    player.CastSpell((uint)WhiteMagicSpellId.CureIII, "<me>");
                                 }
                             }
                         }
-                        //IList<uint> checkTrustIds;
-                        //if((checkTrustIds = party.MissingTrustMembers(checkTrustIds))?.Count > 0)
-                        //{
-                        //    Console.WriteLine("Resummoning Trusts: " + checkTrustIds.Count);
-                        //}
-                        break;
-                    case (uint)Status.InCombat:
                         break;
                     case (uint)Status.Dead:
+                        // TODO: Zone back and shutdown?
                         break;
                     default:
                         Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
                         break;
                 }
 
-                Thread.Sleep(2000);
-                ExpScript.running = false;
+                Thread.Sleep(100);
+                //ExpScript.running = false;
 
                 //bool targetSet = player.Target.SetTarget(player.GetClosestTargetIdByName(MonsterName));
                 //if (targetSet)
@@ -195,6 +220,65 @@ namespace ExpBot.Scripts
                 //    //Console.WriteLine("Ability Element: " + ability.Element);
                 //    //Console.WriteLine(ability.ToString());
                 //}
+            }
+        }
+        private bool IsRunningAndNotAggroed()
+        {
+            return ExpScript.running && !aggroed;
+        }
+        private void SummonTrusts(TrustSpellId[] trusts)
+        {
+            if (trusts?.Length <= 0)
+            {
+                return;
+            }
+
+            IList<PartyMember> partyMembers;
+            while (IsRunningAndNotAggroed() && (partyMembers = party.PartyMembers)?.Count != 6)
+            {
+                foreach (TrustSpellId trust in trusts)
+                {
+                    bool alreadySummoned = false;
+                    foreach (PartyMember member in partyMembers)
+                    {
+                        string memberName = Regex.Replace(member.Name, EnumMatchingRegex, "");
+                        if (memberName.Equals(Regex.Replace(trust.ToString(), @"(UC?)", "")))
+                        {
+                            alreadySummoned = true;
+                            break;
+                        }
+                    }
+                    if (!alreadySummoned)
+                    {
+                        if (IsRunningAndNotAggroed() && player.PlayerStatus != (uint)Status.InCombat && player.GetSpellRecastRemaining((int)trust) != 0)
+                        {
+                            Thread.Sleep(100);
+                        }
+                        else
+                        {
+                            player.CastSpell((uint)trust, "<me>");
+                            if (party.PartyMembers.Count == 6)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private void AggroMonitor()
+        {
+            while (ExpScript.running)
+            {
+                if (player.GetAggroedTargetId()?.TargetID > 0)
+                {
+                    aggroed = true;
+                }
+                else
+                {
+                    aggroed = false;
+                }
+                Thread.Sleep(100);
             }
         }
     }

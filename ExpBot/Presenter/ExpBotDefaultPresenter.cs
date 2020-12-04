@@ -34,18 +34,25 @@ namespace ExpBot.ViewModel
         }
         public bool StartStopBot()
         {
-            ExpScript script;
-            if (!ExpScript.running && (script = new ExpScript(model.Player, model.Target, model.Party)) != null)
+            if (Initialised)
             {
-                ExpScript.running = true;
-                Thread botThread = new Thread(new ThreadStart(script.Run));
-                botThread.IsBackground = true;
-                botThread.Start();
-                return ExpScript.running;
+                ExpScript script;
+                if (!ExpScript.running && (script = new ExpScript(model.Player, model.Target, model.Party)) != null)
+                {
+                    ExpScript.running = true;
+                    Thread botThread = new Thread(new ThreadStart(script.Run));
+                    botThread.IsBackground = true;
+                    botThread.Start();
+                    return ExpScript.running;
+                }
+                else
+                {
+                    model.Unload();
+                    return ExpScript.running = false;
+                }
             }
             else
             {
-                model.Unload();
                 return ExpScript.running = false;
             }
         }

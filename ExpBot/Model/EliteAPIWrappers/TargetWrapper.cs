@@ -19,6 +19,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             {
                 case "TargetStatus":
                 case "Id":
+                case "TargetId":
                 case "Name":
                 case "HPP":
                 case "LockedOn":
@@ -30,10 +31,6 @@ namespace ExpBot.Model.EliteAPIWrappers
                 default:
                     break;
             }
-        }
-        public bool SetTarget(int index)
-        {
-            return api.Target.SetTarget(index);
         }
         public uint TargetStatus
         {

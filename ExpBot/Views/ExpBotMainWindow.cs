@@ -70,6 +70,7 @@ namespace ExpBot.Views
             }
             else
             {
+                // MessageBox.Show("Load Final Fantasy XI before attempting to start the script");
                 btnStartStop.Text = "Start";
             }
         }

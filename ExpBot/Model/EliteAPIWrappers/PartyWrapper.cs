@@ -25,25 +25,6 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
             }
         }
-        public IList<uint> MissingTrustMembers(uint[] checkMissingTrustIds)
-        {
-            IList<uint> missingTrustIds = new List<uint>();
-            IList<PartyMember> members = AllianceMembers;
-            foreach (PartyMember member in members)
-            {
-                if (member.Name.Length > 0 && member.Active == 0)
-                {
-                    foreach (uint trustId in checkMissingTrustIds)
-                    {
-                        if (member.ID == trustId)
-                        {
-                            missingTrustIds.Add(trustId);
-                        }
-                    }
-                }
-            }
-            return missingTrustIds;
-        }
         public IList<PartyMember> PartyMembers
         {
             get

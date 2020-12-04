@@ -1,8 +1,7 @@
 ﻿using EliteMMO.API;
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using static EliteMMO.API.EliteAPI;
 
@@ -11,7 +10,6 @@ namespace ExpBot.Model.EliteAPIWrappers
     public class PlayerWrapper : APIConstants
     {
         private static EliteAPI api;
-        private TargetWrapper target;
 
         public PlayerWrapper(EliteAPI api)
         {
@@ -42,9 +40,18 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
             }
         }
-        public void SendAttack()
+        public void Attack(TargetWrapper target)
         {
-            api.ThirdParty.SendString("/attack");
+            FaceTarget(target);
+            while (!target.LockedOn)
+            {
+                api.ThirdParty.SendString("/lockon <t>");
+                Thread.Sleep(100);
+            }
+            if (PlayerStatus != (uint)Status.InCombat)
+            {
+                api.ThirdParty.SendString("/attack");
+            }
         }
         public short[] GetBuffs()
         {
@@ -60,6 +67,122 @@ namespace ExpBot.Model.EliteAPIWrappers
             api.ThirdParty.SendString("/heal");
             Thread.Sleep(2000);
         }
+        public void MoveForward()
+        {
+            api.ThirdParty.KeyDown(Keys.NUMPAD8);
+        }
+        public void StopMovingForward()
+        {
+            api.ThirdParty.KeyUp(Keys.NUMPAD8);
+        }
+        public void MoveBackward()
+        {
+            api.ThirdParty.KeyDown(Keys.NUMPAD2);
+        }
+        public void StopMovingBackward()
+        {
+            api.ThirdParty.KeyUp(Keys.NUMPAD2);
+        }
+        public bool SetTarget(int id)
+        {
+            return api.Target.SetTarget(id);
+        }
+        public void FaceTarget(TargetWrapper target)
+        {
+            byte angle = (byte)(Math.Atan((target.Z - Z) / (target.X - X)) * -(128.0f / Math.PI));
+            if (X > target.X)
+            {
+                angle += 128;
+            }
+            double radian = (((float)angle) / 255) * 2 * Math.PI;
+            api.Entity.SetEntityHPosition(api.Entity.LocalPlayerIndex, (float)radian);
+        }
+        public XiEntity GetAggroedTargetId()
+        {
+            XiEntity entity = null;
+            for (var x = 0; x < 2048; x++)
+            {
+                entity = api.Entity.GetEntity(x);
+                if (entity.WarpPointer == 0 ||
+                    entity.HealthPercent == 0 ||
+                    entity.TargetID <= 0 ||
+                    (!new BitArray(new int[] { entity.SpawnFlags }).Get(4)) ||
+                    entity.ClaimID != 0)
+                {
+                    continue;
+                }
+
+                // Unfortunately it's not straight-forward to find out
+                // if a monster is targetting the player.
+                if (entity.HealthPercent != 0 &&
+                    entity.Distance <= 5 &&
+                    entity.Status == (uint)Status.InCombat)
+                {
+                    break;
+                }
+            }
+            return entity;
+        }
+        //public XiEntity GetClosestTargetId()
+        //{
+        //    XiEntity closestTargetEntity = null;
+        //    for (var x = 0; x < 2048; x++)
+        //    {
+        //        XiEntity entity = api.Entity.GetEntity(x);
+        //        if (entity.WarpPointer == 0 ||
+        //            entity.HealthPercent == 0 ||
+        //            entity.TargetID <= 0 ||
+        //            (!new BitArray(new int[] { entity.SpawnFlags }).Get(4)) ||
+        //            entity.ClaimID != 0)
+        //        {
+        //            continue;
+        //        }
+
+        //        if (entity.HealthPercent != 0 && entity.Distance <= 100)
+        //        {
+        //            if (closestTargetEntity == null)
+        //            {
+        //                closestTargetEntity = entity;
+        //            }
+        //            else if (closestTargetEntity.Distance > entity.Distance)
+        //            {
+        //                closestTargetEntity = entity;
+        //            }
+        //        }
+        //    }
+        //    Console.WriteLine("Name: " + closestTargetEntity.Name);
+        //    Console.WriteLine("Distance: " + closestTargetEntity.Distance);
+        //    Console.WriteLine("Status: " + closestTargetEntity.Status);
+        //    Console.WriteLine("TargetID: " + closestTargetEntity.TargetID);
+        //    Console.WriteLine("ServerID: " + closestTargetEntity.ServerID);
+        //    Console.WriteLine("ClaimID: " + closestTargetEntity.ClaimID);
+        //    Console.WriteLine("Type: " + closestTargetEntity.Type);
+        //    return closestTargetEntity;
+        //}
+        //public XiEntity GetClosestTargetId()
+        //{
+        //    XiEntity closestTargetId = null;
+        //    for (var x = 0; x < 2048; x++)
+        //    {
+        //        XiEntity id = api.Entity.GetEntity(x);
+        //        if (id.Name?.Length > 0 &&
+        //            !id.Name.Equals(Name) &&
+        //            id.HealthPercent > 0 &&
+        //            id.Distance > 0 &&
+        //            id.ServerID == Id)
+        //        {
+        //            if (closestTargetId == null)
+        //            {
+        //                closestTargetId = id;
+        //            }
+        //            else if (closestTargetId.Distance > id.Distance)
+        //            {
+        //                closestTargetId = id;
+        //            }
+        //        }
+        //    }
+        //    return closestTargetId;
+        //}
         public int GetClosestTargetIdByName(string name)
         {
             XiEntity closestTargetId = null;
@@ -80,20 +203,6 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             return (int)closestTargetId.TargetID;
         }
-        public void FaceTarget()
-        {
-            if (target?.Id == 0)
-            {
-                return;
-            }
-            byte angle = (byte)(Math.Atan((Target.Z - Z) / (Target.X - X)) * -(128.0f / Math.PI));
-            if (X > Target.X)
-            {
-                angle += 128;
-            }
-            double radian = (((float)angle) / 255) * 2 * Math.PI;
-            SetPlayer("H", (float)radian);
-        }
         //public IList<ISpell> GetAllSpell()
         //{
         //    IList<ISpell> spells = new List<ISpell>();
@@ -111,7 +220,12 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             ISpell spell = api.Resources.GetSpell(spellId);
             api.ThirdParty.SendString("/ma \"" + spell.Name[0] + "\" " + target);
-            Thread.Sleep(TimeSpan.FromSeconds(spell.CastTime));
+            while (GetSpellRecastRemaining((int)spellId) == 0)
+            {
+                Thread.Sleep(100);
+            }
+            // TODO: Animation Delay - Configurable?
+            Thread.Sleep(2500);
         }
         public ISpell GetTrustSpell(TrustSpellId trustSpellId)
         {
@@ -228,14 +342,10 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             return api.Player.HasAbility((uint)id);
         }
-        public TargetWrapper Target
+        public uint Id
         {
-            get => target;
-            set
-            {
-                target = value;
-                SetPlayer("Target", value);
-            }
+            get => api.Player.ServerID;
+            set => SetPlayer("Id", value);
         }
         public int Job
         {
