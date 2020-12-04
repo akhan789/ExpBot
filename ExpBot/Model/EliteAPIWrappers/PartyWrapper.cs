@@ -7,7 +7,7 @@ using static EliteMMO.API.EliteAPI;
 
 namespace ExpBot.Model.EliteAPIWrappers
 {
-    public class PartyWrapper
+    public class PartyWrapper : APIConstants
     {
         private static EliteAPI api;
         public PartyWrapper(EliteAPI api)
@@ -18,16 +18,50 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             switch (propertyName)
             {
+                case "AllianceMembers":
                 case "PartyMembers":
                 case "PartyMember":
                 default:
                     break;
             }
         }
-        public List<PartyMember> PartyMembers
+        public IList<uint> MissingTrustMembers(uint[] checkMissingTrustIds)
+        {
+            IList<uint> missingTrustIds = new List<uint>();
+            IList<PartyMember> members = AllianceMembers;
+            foreach (PartyMember member in members)
+            {
+                if (member.Name.Length > 0 && member.Active == 0)
+                {
+                    foreach (uint trustId in checkMissingTrustIds)
+                    {
+                        if (member.ID == trustId)
+                        {
+                            missingTrustIds.Add(trustId);
+                        }
+                    }
+                }
+            }
+            return missingTrustIds;
+        }
+        public IList<PartyMember> PartyMembers
+        {
+            get
+            {
+                IList<PartyMember> partyMembers = new List<PartyMember>();
+                IList<PartyMember> allianceMembers = AllianceMembers;
+                for (int i = 0; i < api.Party.GetAllianceInfo().Party0Count; i++)
+                {
+                    partyMembers.Add(allianceMembers[i]);
+                }
+                return partyMembers;
+            }
+            set => SetParty("PartyMembers", value);
+        }
+        public IList<PartyMember> AllianceMembers
         {
             get => api.Party.GetPartyMembers();
-            set => SetParty("PartyMembers", value);
+            set => SetParty("AllianceMembers", value);
         }
         /// <summary>
         /// Party Member 1 (Index 0) is the Player.
