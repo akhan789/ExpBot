@@ -17,10 +17,12 @@ namespace ExpBot.Scripts
     {
         public static bool running;
         private bool aggroed = false;
+        // Use this Regex any time we need to compare an in-game thing vs an Enum name
+        // e.g. Apururu vs Apururu (UC); or Mecisto. Mantle vs MecistoMantle.
         private const string EnumMatchingRegex = "[^a-zA-Z0-9]";
-        private PlayerWrapper player;
-        private TargetWrapper target;
-        private PartyWrapper party;
+        private readonly PlayerWrapper player;
+        private readonly TargetWrapper target;
+        private readonly PartyWrapper party;
         public ExpScript(PlayerWrapper player, TargetWrapper target, PartyWrapper party)
         {
             this.player = player;
@@ -41,7 +43,11 @@ namespace ExpBot.Scripts
                 TrustSpellId.Kupofried,
                 TrustSpellId.Selhteus
             };
-            const int HealHP = 90;
+            const int CureIIIHealHP = 80;
+            const int CureIVHealHP = 50;
+            const int CureVHealHP = 30;
+            const int WeaponSkillTP = 1000;
+            const TPAbilityId WeaponSkillId = TPAbilityId.Realmrazer;
             const double MeleeRange = 3.0d;
             const string MonsterName = "Sinewy Matamata";
             float initialPlayerX = player.X;
@@ -68,7 +74,9 @@ namespace ExpBot.Scripts
                         if (IsRunningAndNotAggroed())
                         {
                             //player.SetTarget(0);
-                            SummonTrusts(trusts);
+                            // equip exp/cap point enhancing gear.
+                            HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
+                            SummonTrustsIfNecessary(trusts);
                             // check hp, heal if necessary.
                             // find target to attack.
                             // run to target
@@ -90,42 +98,24 @@ namespace ExpBot.Scripts
                         if (target.HPP > 1)
                         {
                             player.FaceTarget(target);
-                            if (target.Distance >= MeleeRange + 0.5d && target.Distance <= MeleeRange - 0.5d)
+                            isMoving = MoveWithinMeleeRange(MeleeRange);
+                            if (!isMoving)
                             {
-                                // Within melee range.
-                                player.StopMovingBackward();
-                                player.StopMovingForward();
-                                isMoving = false;
-                            }
-                            else if (target.Distance > MeleeRange + 0.5d)
-                            {
-                                player.StopMovingBackward();
-                                player.MoveForward();
-                                isMoving = true;
-                            }
-                            else if (target.Distance < MeleeRange - 0.5d)
-                            {
-                                player.StopMovingForward();
-                                player.MoveBackward();
-                                isMoving = true;
-                            }
-                            if(!isMoving) { 
-                                if (player.HPP < HealHP)
-                                {
-                                    player.CastSpell((uint)WhiteMagicSpellId.CureIII, "<me>");
-                                }
+                                HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
+                                UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
                             }
                         }
                         break;
                     case (uint)Status.Dead:
-                        // TODO: Zone back and shutdown?
+                        player.DeathWarp();
+                        ExpScript.running = false; // Kill the bot, we're done.
                         break;
                     default:
                         Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
                         break;
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(500);
                 //ExpScript.running = false;
 
                 //bool targetSet = player.Target.SetTarget(player.GetClosestTargetIdByName(MonsterName));
@@ -221,12 +211,86 @@ namespace ExpBot.Scripts
                 //    //Console.WriteLine(ability.ToString());
                 //}
             }
+            Console.WriteLine("Exp Bot has stopped running");
         }
         private bool IsRunningAndNotAggroed()
         {
             return ExpScript.running && !aggroed;
         }
-        private void SummonTrusts(TrustSpellId[] trusts)
+        private bool MoveWithinMeleeRange(double meleeRange)
+        {
+            if (target.Distance >= meleeRange + 0.5d && target.Distance <= meleeRange - 0.5d)
+            {
+                // Within melee range.
+                player.StopMovingBackward();
+                player.StopMovingForward();
+                return false;
+            }
+            else if (target.Distance > meleeRange + 0.5d)
+            {
+                player.StopMovingBackward();
+                player.MoveForward();
+                return true;
+            }
+            else if (target.Distance < meleeRange - 0.5d)
+            {
+                player.StopMovingForward();
+                player.MoveBackward();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private void UseWeaponSkillIfNecessary(int weaponSkillTP, TPAbilityId weaponSkillId)
+        {
+            if (player.PlayerStatus == (uint)Status.InCombat &&
+                player.TP >= weaponSkillTP &&
+                player.HasTPAbility(weaponSkillId))
+            {
+                player.PerformWeaponSkill(weaponSkillId, "<t>");
+            }
+        }
+        private void HealHPIfNecessary(int cureIIIHP, int cureIVHP, int cureVHP)
+        {
+            int partyMember = 0;
+            foreach (PartyMember member in party.PartyMembers)
+            {
+                if (!ExpScript.running || player.PlayerStatus == (uint)Status.Idle && aggroed)
+                {
+                    break;
+                }
+                try
+                {
+                    if (member.CurrentHPP <= cureVHP && player.HasWhiteMagicSpell(WhiteMagicSpellId.CureV))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.CureV, "<p" + partyMember + ">");
+                    }
+                    else if (member.CurrentHPP <= cureIVHP && player.HasWhiteMagicSpell(WhiteMagicSpellId.CureIV))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.CureIV, "<p" + partyMember + ">");
+                    }
+                    else if (member.CurrentHPP <= cureIIIHP && player.HasWhiteMagicSpell(WhiteMagicSpellId.CureIII))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.CureIII, "<p" + partyMember + ">");
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (e.Message.Equals("Not enough MP"))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        throw e;
+                    }
+                }
+                partyMember++;
+            }
+        }
+        private void SummonTrustsIfNecessary(TrustSpellId[] trusts)
         {
             if (trusts?.Length <= 0)
             {

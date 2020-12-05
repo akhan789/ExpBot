@@ -1,6 +1,7 @@
 ﻿using EliteMMO.API;
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using static EliteMMO.API.EliteAPI;
@@ -40,6 +41,15 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
             }
         }
+        public short[] GetBuffs()
+        {
+            return api.Player.Buffs;
+        }
+        public bool HasBuff(short id)
+        {
+            // TODO:
+            return false;
+        }
         public void Attack(TargetWrapper target)
         {
             FaceTarget(target);
@@ -53,19 +63,19 @@ namespace ExpBot.Model.EliteAPIWrappers
                 api.ThirdParty.SendString("/attack");
             }
         }
-        public short[] GetBuffs()
-        {
-            return api.Player.Buffs;
-        }
-        public bool HasBuff(short id)
-        {
-            // TODO:
-            return false;
-        }
         public void Heal()
         {
             api.ThirdParty.SendString("/heal");
             Thread.Sleep(2000);
+        }
+        public void DeathWarp()
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(1.0));
+            api.ThirdParty.KeyPress(Keys.NUMPADENTER);
+            Thread.Sleep(TimeSpan.FromSeconds(0.5));
+            api.ThirdParty.KeyPress(Keys.RIGHT);
+            Thread.Sleep(TimeSpan.FromSeconds(0.5));
+            api.ThirdParty.KeyPress(Keys.NUMPADENTER);
         }
         public void MoveForward()
         {
@@ -109,13 +119,14 @@ namespace ExpBot.Model.EliteAPIWrappers
                     (!new BitArray(new int[] { entity.SpawnFlags }).Get(4)) ||
                     entity.ClaimID != 0)
                 {
+                    entity = null;
                     continue;
                 }
 
                 // Unfortunately it's not straight-forward to find out
                 // if a monster is targetting the player.
                 if (entity.HealthPercent != 0 &&
-                    entity.Distance <= 5 &&
+                    entity.Distance <= 7.5 &&
                     entity.Status == (uint)Status.InCombat)
                 {
                     break;
@@ -203,15 +214,6 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             return (int)closestTargetId.TargetID;
         }
-        //public IList<ISpell> GetAllSpell()
-        //{
-        //    IList<ISpell> spells = new List<ISpell>();
-        //    for (uint x = 0; x < 10000; x++)
-        //    {
-        //        spells.Add(api.Resources.GetSpell(x));
-        //    }
-        //    return spells;
-        //}
         public int GetSpellRecastRemaining(int spellId)
         {
             return api.Recast.GetSpellRecast(spellId);
@@ -219,27 +221,40 @@ namespace ExpBot.Model.EliteAPIWrappers
         public void CastSpell(uint spellId, string target)
         {
             ISpell spell = api.Resources.GetSpell(spellId);
+            if (spell.MPCost > MP)
+            {
+                throw new Exception("Not enough MP");
+            }
             api.ThirdParty.SendString("/ma \"" + spell.Name[0] + "\" " + target);
+            int castTime = spell.CastTime;
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            // TODO: Is there a way to break out of this if the spell was interrupted??? maybe chat log??
             while (GetSpellRecastRemaining((int)spellId) == 0)
             {
+                //Console.WriteLine("Cast Bar " + spell.Name[0] + " is (Percent, Max, Count): " + api.CastBar.Percent + ", " + api.CastBar.Max + ", " + api.CastBar.Count);
                 Thread.Sleep(100);
+                if (sw.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
+                {
+                    break;
+                }
             }
             // TODO: Animation Delay - Configurable?
-            Thread.Sleep(2500);
-        }
-        public ISpell GetTrustSpell(TrustSpellId trustSpellId)
-        {
-            return api.Resources.GetSpell((uint)trustSpellId);
+            Thread.Sleep(2750);
         }
         public void PerformJobAbility(uint jobAbilityId, string target)
         {
             IAbility ability = api.Resources.GetAbility(jobAbilityId);
             api.ThirdParty.SendString("/ja \"" + ability.Name[0] + "\" " + target);
+            // TODO: Animation Delay - Configurable?
+            Thread.Sleep(2500);
         }
         public void PerformWeaponSkill(TPAbilityId weaponSkillId, string target)
         {
             IAbility weaponSkill = api.Resources.GetAbility((uint)weaponSkillId);
             api.ThirdParty.SendString("/ws \"" + weaponSkill.Name[0] + "\" " + target);
+            // TODO: Animation Delay - Configurable?
+            Thread.Sleep(2500);
         }
         public bool HasItemInItems(ItemId id)
         {
@@ -281,6 +296,8 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             return HasItem(ContainerId.MogWardrobe2, id);
         }
+        // TODO: Mog Wardrobe 3
+        // TODO: Mog Wardrobe 4
         public bool HasItem(ContainerId containerId, ItemId itemId)
         {
             return ItemQuantity(containerId, itemId) > 0;
