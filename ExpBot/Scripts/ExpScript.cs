@@ -3,6 +3,7 @@ using ExpBot.Model.EliteAPIWrappers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -43,12 +44,16 @@ namespace ExpBot.Scripts
                 TrustSpellId.Kupofried,
                 TrustSpellId.Selhteus
             };
+            const uint RestMPP = 20;
+            const uint PullSpell = (uint)BlackMagicSpellId.Stone;
             const int CureIIIHealHP = 80;
             const int CureIVHealHP = 50;
             const int CureVHealHP = 30;
             const int WeaponSkillTP = 1000;
             const TPAbilityId WeaponSkillId = TPAbilityId.Realmrazer;
             const double MeleeRange = 3.0d;
+            const double PullDistance = 20.0d;
+            const double PullSearchRadius = 50.0d;
             const string MonsterName = "Sinewy Matamata";
             float initialPlayerX = player.X;
             float initialPlayerY = player.Y;
@@ -69,27 +74,32 @@ namespace ExpBot.Scripts
                 {
                     case (uint)Status.Resting:
                         player.Heal(); // Stand back up.
-                        goto case (uint)Status.Idle;
+                        break;
                     case (uint)Status.Idle:
                         if (IsRunningAndNotAggroed())
                         {
+                            RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
+                            RestMPIfNecessary(RestMPP);
                             //player.SetTarget(0);
                             // equip exp/cap point enhancing gear.
                             HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
                             SummonTrustsIfNecessary(trusts);
-                            // check hp, heal if necessary.
                             // find target to attack.
-                            // run to target
-                            // attack target
-                            // goto case incombat? or just wait 2000
+                            //player.GetClosestTargetIdByName(MonsterName);
+                            // run to pull distance.
+                            // pull.
+                            // run to idle location.
+                            // attack target.
+                            // will automatically attack after 1 second.
                         }
                         else
                         {
+                            RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
                             uint targetId;
-                            if ((targetId = player.GetAggroedTargetId().TargetID) > 0)
+                            if (ExpScript.running && (targetId = player.GetAggroedTargetId().TargetID) > 0)
                             {
                                 player.SetTarget((int)targetId);
-                                player.FaceTarget(target);
+                                player.FaceTarget(target.X, target.Z);
                                 player.Attack(target);
                             }
                         }
@@ -97,8 +107,8 @@ namespace ExpBot.Scripts
                     case (uint)Status.InCombat:
                         if (target.HPP > 1)
                         {
-                            player.FaceTarget(target);
-                            isMoving = MoveWithinMeleeRange(MeleeRange);
+                            player.FaceTarget(target.X, target.Z);
+                            isMoving = MoveWithinDistance(target.Distance, MeleeRange);
                             if (!isMoving)
                             {
                                 HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
@@ -213,26 +223,52 @@ namespace ExpBot.Scripts
             }
             Console.WriteLine("Exp Bot has stopped running");
         }
+
         private bool IsRunningAndNotAggroed()
         {
             return ExpScript.running && !aggroed;
         }
-        private bool MoveWithinMeleeRange(double meleeRange)
+        private void RunToPullDistance(double pullDistance)
         {
-            if (target.Distance >= meleeRange + 0.5d && target.Distance <= meleeRange - 0.5d)
+
+        }
+        private void RunToIdleLocation(float idleX, float idleY, float idleZ)
+        {
+            if (DistanceToLocation(idleX, idleY, idleZ) > 0.5)
             {
-                // Within melee range.
+                player.Move(idleX, idleY, idleZ);
+                Stopwatch stuckWatch = new Stopwatch();
+                stuckWatch.Start();
+                while (ExpScript.running && DistanceToLocation(idleX, idleY, idleZ) > 0.5)
+                {
+                    if (stuckWatch.ElapsedMilliseconds > 1000)
+                    {
+                        // Try again every second until we get to the actual location.
+                        player.Stop();
+                        RunToIdleLocation(idleX, idleY, idleZ);
+                        return;
+                    }
+                    Thread.Sleep(100);
+                }
+                player.Stop();
+            }
+        }
+        private bool MoveWithinDistance(double targetDistance, double distance)
+        {
+            if (targetDistance >= distance + 0.5d && targetDistance <= distance - 0.5d)
+            {
+                // Within distance.
                 player.StopMovingBackward();
                 player.StopMovingForward();
                 return false;
             }
-            else if (target.Distance > meleeRange + 0.5d)
+            else if (targetDistance > distance + 0.5d)
             {
                 player.StopMovingBackward();
                 player.MoveForward();
                 return true;
             }
-            else if (target.Distance < meleeRange - 0.5d)
+            else if (targetDistance < distance - 0.5d)
             {
                 player.StopMovingForward();
                 player.MoveBackward();
@@ -250,6 +286,24 @@ namespace ExpBot.Scripts
                 player.HasTPAbility(weaponSkillId))
             {
                 player.PerformWeaponSkill(weaponSkillId, "<t>");
+            }
+        }
+        private void RestMPIfNecessary(uint restMPP)
+        {
+            if (IsRunningAndNotAggroed())
+            {
+                if (player.MPP <= restMPP)
+                {
+                    if (target.Id != 0)
+                    {
+                        player.SetTarget(0);
+                    }
+                    player.Heal();
+                    while (IsRunningAndNotAggroed() && player.MPP < 100)
+                    {
+                        Thread.Sleep(100);
+                    }
+                }
             }
         }
         private void HealHPIfNecessary(int cureIIIHP, int cureIVHP, int cureVHP)
@@ -329,6 +383,10 @@ namespace ExpBot.Scripts
                     }
                 }
             }
+        }
+        private double DistanceToLocation(float locationX, float locationY, float locationZ)
+        {
+            return Math.Truncate(Math.Sqrt(Math.Pow((locationX - player.X), 2.0d) + Math.Pow((locationZ - player.Z), 2.0d) + Math.Pow((locationY - player.Y), 2.0d)));
         }
         private void AggroMonitor()
         {

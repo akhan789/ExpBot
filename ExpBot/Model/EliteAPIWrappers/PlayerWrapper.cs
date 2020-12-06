@@ -52,11 +52,11 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public void Attack(TargetWrapper target)
         {
-            FaceTarget(target);
+            FaceTarget(target.X, target.Z);
             while (!target.LockedOn)
             {
                 api.ThirdParty.SendString("/lockon <t>");
-                Thread.Sleep(100);
+                Thread.Sleep(250);
             }
             if (PlayerStatus != (uint)Status.InCombat)
             {
@@ -76,6 +76,16 @@ namespace ExpBot.Model.EliteAPIWrappers
             api.ThirdParty.KeyPress(Keys.RIGHT);
             Thread.Sleep(TimeSpan.FromSeconds(0.5));
             api.ThirdParty.KeyPress(Keys.NUMPADENTER);
+        }
+        public void Move(float locationX, float locationY, float locationZ)
+        {
+            api.AutoFollow.SetAutoFollowCoords(locationX - X, locationY - Y, locationZ - Z);
+            api.AutoFollow.IsAutoFollowing = true;
+            Thread.Sleep(100);
+        }
+        public void Stop()
+        {
+            api.AutoFollow.IsAutoFollowing = false;
         }
         public void MoveForward()
         {
@@ -97,10 +107,10 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             return api.Target.SetTarget(id);
         }
-        public void FaceTarget(TargetWrapper target)
+        public void FaceTarget(float targetX, float targetZ)
         {
-            byte angle = (byte)(Math.Atan((target.Z - Z) / (target.X - X)) * -(128.0f / Math.PI));
-            if (X > target.X)
+            byte angle = (byte)(Math.Atan((targetZ - Z) / (targetX - X)) * -(128.0f / Math.PI));
+            if (X > targetX)
             {
                 angle += 128;
             }
@@ -227,14 +237,15 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             api.ThirdParty.SendString("/ma \"" + spell.Name[0] + "\" " + target);
             int castTime = spell.CastTime;
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            Stopwatch spellTimeoutWatch = new Stopwatch();
+            spellTimeoutWatch.Start();
             // TODO: Is there a way to break out of this if the spell was interrupted??? maybe chat log??
+            // TODO: chatlog accessible via api.Chat.Getxxx
             while (GetSpellRecastRemaining((int)spellId) == 0)
             {
                 //Console.WriteLine("Cast Bar " + spell.Name[0] + " is (Percent, Max, Count): " + api.CastBar.Percent + ", " + api.CastBar.Max + ", " + api.CastBar.Count);
                 Thread.Sleep(100);
-                if (sw.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
+                if (spellTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
                 {
                     break;
                 }
