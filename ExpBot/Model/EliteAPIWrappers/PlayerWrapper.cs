@@ -41,26 +41,63 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
             }
         }
-        public short[] GetBuffs()
-        {
-            return api.Player.Buffs;
-        }
+        //public string GetChatLog()
+        //{
+        //    ChatEntry chatEntry = api.Chat.GetNextChatLine();
+        //    if (chatEntry != null)
+        //    {
+        //        Console.WriteLine("Timestamp: " + chatEntry.Timestamp);
+        //        Console.WriteLine("ChatColor: " + chatEntry.ChatColor);
+        //        Console.WriteLine("ChatType: " + chatEntry.ChatType);
+        //        Console.WriteLine("Index1: " + chatEntry.Index1);
+        //        Console.WriteLine("Index2: " + chatEntry.Index2);
+        //        Console.WriteLine("Length: " + chatEntry.Length);
+        //        Console.WriteLine("RawLine: " + chatEntry.RawLine);
+        //        Console.WriteLine("RawText: " + chatEntry.RawText);
+        //        Console.WriteLine("         Text: " + chatEntry.Text);
+        //        return chatEntry.Text;
+        //    }
+        //    else
+        //    {
+        //        return "";
+        //    }
+        //}
         public bool HasBuff(short id)
         {
             // TODO:
             return false;
         }
+        public short[] GetBuffs()
+        {
+            return api.Player.Buffs;
+        }
         public void Attack(TargetWrapper target)
         {
             FaceTarget(target.X, target.Z);
-            while (!target.LockedOn)
+            if (!target.LockedOn)
             {
-                api.ThirdParty.SendString("/lockon <t>");
-                Thread.Sleep(250);
+                LockOn(target);
             }
             if (PlayerStatus != (uint)Status.InCombat)
             {
                 api.ThirdParty.SendString("/attack");
+            }
+            Thread.Sleep(2500);
+        }
+        public void LockOn(TargetWrapper target)
+        {
+            while (!target.LockedOn)
+            {
+                api.ThirdParty.SendString("/lockon <t>");
+                Thread.Sleep(500);
+            }
+        }
+        public void UnLockOn(TargetWrapper target)
+        {
+            while (target.LockedOn)
+            {
+                api.ThirdParty.SendString("/lockon <t>");
+                Thread.Sleep(500);
             }
         }
         public void Heal()
@@ -117,7 +154,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             double radian = (((float)angle) / 255) * 2 * Math.PI;
             api.Entity.SetEntityHPosition(api.Entity.LocalPlayerIndex, (float)radian);
         }
-        public XiEntity GetAggroedTargetId()
+        public uint GetAggroedTargetId()
         {
             XiEntity entity = null;
             for (var x = 0; x < 2048; x++)
@@ -142,7 +179,14 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
                 }
             }
-            return entity;
+            if (entity != null)
+            {
+                return entity.TargetID;
+            }
+            else
+            {
+                return 0;
+            }
         }
         //public XiEntity GetClosestTargetId()
         //{
@@ -204,31 +248,46 @@ namespace ExpBot.Model.EliteAPIWrappers
         //    }
         //    return closestTargetId;
         //}
-        public int GetClosestTargetIdByName(string name)
+        public int GetClosestTargetIdByName(string name, float maxDistance)
         {
-            XiEntity closestTargetId = null;
-            for (var x = 0; x < 2048; x++)
+            float searchID = 999;
+            int targetId = -1;
+            for (int x = 0; x < 2048; x++)
             {
-                XiEntity id = api.Entity.GetEntity(x);
-                if (id.Name != null && id.Name.ToLower().Equals(name.ToLower()))
+                var entity = api.Entity.GetEntity(x);
+
+                if (entity.WarpPointer == 0 ||
+                    entity.HealthPercent == 0 ||
+                    entity.TargetID <= 0 ||
+                    (!new BitArray(new int[] { entity.SpawnFlags }).Get(4)) ||
+                    entity.ClaimID != 0)
                 {
-                    if (closestTargetId == null)
+                    continue;
+                }
+
+                if (entity.Name != null &&
+                    entity.Name.ToLower().Equals(name.ToLower()))
+                {
+                    if (entity.HealthPercent != 0 &&
+                        entity.Distance <= maxDistance)
                     {
-                        closestTargetId = id;
-                    }
-                    else if (closestTargetId.Distance > id.Distance)
-                    {
-                        closestTargetId = id;
+                        if (searchID > entity.Distance &&
+                            entity.ClaimID == 0 &&
+                            entity.HealthPercent != 0)
+                        {
+                            searchID = entity.Distance;
+                            targetId = Convert.ToInt32(entity.TargetID);
+                        }
                     }
                 }
             }
-            return (int)closestTargetId.TargetID;
+            return targetId;
         }
         public int GetSpellRecastRemaining(int spellId)
         {
             return api.Recast.GetSpellRecast(spellId);
         }
-        public void CastSpell(uint spellId, string target)
+        public bool CastSpell(uint spellId, string target)
         {
             ISpell spell = api.Resources.GetSpell(spellId);
             if (spell.MPCost > MP)
@@ -239,19 +298,18 @@ namespace ExpBot.Model.EliteAPIWrappers
             int castTime = spell.CastTime;
             Stopwatch spellTimeoutWatch = new Stopwatch();
             spellTimeoutWatch.Start();
-            // TODO: Is there a way to break out of this if the spell was interrupted??? maybe chat log??
-            // TODO: chatlog accessible via api.Chat.Getxxx
-            while (GetSpellRecastRemaining((int)spellId) == 0)
+            while (GetSpellRecastRemaining((int)spellId) <= 0)
             {
-                //Console.WriteLine("Cast Bar " + spell.Name[0] + " is (Percent, Max, Count): " + api.CastBar.Percent + ", " + api.CastBar.Max + ", " + api.CastBar.Count);
-                Thread.Sleep(100);
-                if (spellTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
+                Thread.Sleep(250);
+                ChatEntry chatEntry = api.Chat.GetNextChatLine();
+                if (chatEntry != null && chatEntry.Text.Equals(Name + "'s casting is interrupted.") || spellTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
                 {
-                    break;
+                    return false;
                 }
             }
             // TODO: Animation Delay - Configurable?
-            Thread.Sleep(2750);
+            Thread.Sleep(2600);
+            return true;
         }
         public void PerformJobAbility(uint jobAbilityId, string target)
         {

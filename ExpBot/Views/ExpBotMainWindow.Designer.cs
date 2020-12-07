@@ -73,7 +73,7 @@ namespace ExpBot.Views
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(93, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -87,6 +87,7 @@ namespace ExpBot.Views
             // expBotMainWindowPanel
             // 
             this.expBotMainWindowPanel.AutoSize = true;
+            this.expBotMainWindowPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.expBotMainWindowPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.expBotMainWindowPanel.Controls.Add(this.btnStartStop);
             this.expBotMainWindowPanel.Controls.Add(this.lblTP);
@@ -209,10 +210,8 @@ namespace ExpBot.Views
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.ClientSize = new System.Drawing.Size(624, 261);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ExpBotMainWindow_FormClosed);
             this.Controls.Add(this.expBotMainWindowPanel);
             this.Controls.Add(this.expBotMainWindowMenuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -221,6 +220,7 @@ namespace ExpBot.Views
             this.Name = "ExpBotMainWindow";
             this.Padding = new System.Windows.Forms.Padding(5);
             this.Text = "Experience Farming Bot by SoLiDwAtEr";
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ExpBotMainWindow_FormClosed);
             this.expBotMainWindowMenuStrip.ResumeLayout(false);
             this.expBotMainWindowMenuStrip.PerformLayout();
             this.expBotMainWindowPanel.ResumeLayout(false);

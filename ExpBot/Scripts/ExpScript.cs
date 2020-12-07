@@ -39,7 +39,8 @@ namespace ExpBot.Scripts
             // Parameters - TODO: Make these all configurable via UI.
             TrustSpellId[] trusts = {
                 TrustSpellId.Gessho,
-                TrustSpellId.ApururuUC,
+                //TrustSpellId.ApururuUC,
+                TrustSpellId.Cherukiki,
                 TrustSpellId.ShantottoII,
                 TrustSpellId.Kupofried,
                 TrustSpellId.Selhteus
@@ -52,8 +53,8 @@ namespace ExpBot.Scripts
             const int WeaponSkillTP = 1000;
             const TPAbilityId WeaponSkillId = TPAbilityId.Realmrazer;
             const double MeleeRange = 3.0d;
-            const double PullDistance = 20.0d;
-            const double PullSearchRadius = 50.0d;
+            const double PullDistance = 18.0d;
+            const float PullSearchRadius = 50.0f;
             const string MonsterName = "Sinewy Matamata";
             float initialPlayerX = player.X;
             float initialPlayerY = player.Y;
@@ -66,160 +67,140 @@ namespace ExpBot.Scripts
 
             // Actual Bot
             bool isMoving = false;
-            while (ExpScript.running)
+            bool isPulling = false;
+            try
             {
-                player.StopMovingBackward();
-                player.StopMovingForward();
-                switch (player.PlayerStatus)
+                while (ExpScript.running)
                 {
-                    case (uint)Status.Resting:
-                        player.Heal(); // Stand back up.
-                        break;
-                    case (uint)Status.Idle:
-                        if (IsRunningAndNotAggroed())
-                        {
-                            RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
-                            RestMPIfNecessary(RestMPP);
-                            //player.SetTarget(0);
-                            // equip exp/cap point enhancing gear.
-                            HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
-                            SummonTrustsIfNecessary(trusts);
-                            // find target to attack.
-                            //player.GetClosestTargetIdByName(MonsterName);
-                            // run to pull distance.
-                            // pull.
-                            // run to idle location.
-                            // attack target.
-                            // will automatically attack after 1 second.
-                        }
-                        else
-                        {
-                            RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
-                            uint targetId;
-                            if (ExpScript.running && (targetId = player.GetAggroedTargetId().TargetID) > 0)
+                    player.StopMovingBackward();
+                    player.StopMovingForward();
+                    switch (player.PlayerStatus)
+                    {
+                        case (uint)Status.Resting:
+                            //Console.WriteLine("Player status: Resting");
+                            player.Heal(); // Stand back up.
+                            break;
+                        case (uint)Status.Idle:
+                            //Console.WriteLine("Player status: Idle");
+                            if (IsRunningAndNotAggroed())
                             {
-                                player.SetTarget((int)targetId);
+                                if (!isPulling)
+                                {
+                                    player.SetTarget(0);
+                                    if (DistanceToLocation(initialPlayerX, initialPlayerY, initialPlayerZ) > 3.0f)
+                                    {
+                                        RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
+                                    }
+                                    RestMPIfNecessary(RestMPP);
+                                    // equip exp/cap point enhancing gear.
+                                    HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
+                                    SummonTrustsIfNecessary(trusts);
+                                    int targetId;
+                                    if ((targetId = player.GetClosestTargetIdByName(MonsterName, PullSearchRadius)) > 0)
+                                    {
+                                        player.SetTarget(targetId);
+                                        //Console.WriteLine("Player SetTarget: " + targetId);
+                                        //Console.WriteLine("Player isPulling: " + isPulling);
+                                        isPulling = true;
+                                    }
+                                    else
+                                    {
+                                        //Console.WriteLine("Player isPulling: " + isPulling);
+                                        isPulling = false;
+                                    }
+                                }
+                                else
+                                {
+                                    player.FaceTarget(target.X, target.Z);
+                                    if (!target.LockedOn)
+                                    {
+                                        player.LockOn(target);
+                                    }
+                                    //Console.WriteLine("Player LockOn");
+                                    isMoving = MoveWithinPullDistance(target.Distance, PullDistance);
+                                    if (!isMoving)
+                                    {
+                                        //Console.WriteLine("Player not moving");
+                                        if (target.HPP <= 1)
+                                        {
+                                            int targetId;
+                                            if ((targetId = player.GetClosestTargetIdByName(MonsterName, PullSearchRadius)) > 0)
+                                            {
+                                                player.SetTarget(targetId);
+                                                //Console.WriteLine("Player SetTarget: " + targetId);
+                                                continue;
+                                            }
+                                        }
+                                        while (IsRunningAndNotAggroed() && !player.CastSpell(PullSpell, "<t>"))
+                                        {
+                                            Thread.Sleep(100);
+                                        }
+                                        if (target.LockedOn)
+                                        {
+                                            player.UnLockOn(target);
+                                        }
+                                        //Console.WriteLine("Player Unlock");
+                                        RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
+                                        player.Attack(target);
+                                        //Console.WriteLine("Player Attacking");
+                                        isPulling = false;
+                                        //Console.WriteLine("Player isPulling: " + isPulling);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                if (DistanceToLocation(initialPlayerX, initialPlayerY, initialPlayerZ) > 3.0f)
+                                {
+                                    RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
+                                }
+                                uint targetId;
+                                if (ExpScript.running && (targetId = player.GetAggroedTargetId()) > 0)
+                                {
+                                    player.SetTarget((int)targetId);
+                                    //Console.WriteLine("Player SetTarget: " + targetId);
+                                    if (target.HPP > 1)
+                                    {
+                                        player.Attack(target);
+                                    }
+                                    //Console.WriteLine("Player Attacking aggro");
+                                }
+                            }
+                            break;
+                        case (uint)Status.InCombat:
+                            //Console.WriteLine("Player status: InCombat");
+                            if (target.HPP > 1)
+                            {
                                 player.FaceTarget(target.X, target.Z);
-                                player.Attack(target);
+                                isMoving = MoveWithinDistance(target.Distance, MeleeRange);
+                                if (!isMoving)
+                                {
+                                    HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
+                                    UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                }
                             }
-                        }
-                        break;
-                    case (uint)Status.InCombat:
-                        if (target.HPP > 1)
-                        {
-                            player.FaceTarget(target.X, target.Z);
-                            isMoving = MoveWithinDistance(target.Distance, MeleeRange);
-                            if (!isMoving)
-                            {
-                                HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
-                                UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
-                            }
-                        }
-                        break;
-                    case (uint)Status.Dead:
-                        player.DeathWarp();
-                        ExpScript.running = false; // Kill the bot, we're done.
-                        break;
-                    default:
-                        Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
-                        break;
+                            break;
+                        case (uint)Status.Dead:
+                            Console.WriteLine("Player status: Dead");
+                            player.DeathWarp();
+                            ExpScript.running = false; // Kill the bot, we're done.
+                            break;
+                        default:
+                            Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
+                            break;
+                    }
+
+                    Thread.Sleep(500);
                 }
-
-                Thread.Sleep(500);
-                //ExpScript.running = false;
-
-                //bool targetSet = player.Target.SetTarget(player.GetClosestTargetIdByName(MonsterName));
-                //if (targetSet)
-                //{
-                //    Console.WriteLine(targetSet);
-                //}
-                //Thread.Sleep(2000);
-                //ExpScript.running = false;
-                //player.SendAttack();
-                //Console.WriteLine("Player status: " + player.PlayerStatus.ToString());
-                //Console.WriteLine("Target Id: " + target.Id);
-                //Console.WriteLine("Target name: " + target.Name);
-                //Console.WriteLine("Target HPP: " + target.HPP);
-                //Console.WriteLine("Has ability Realmrazer: " + player.HasTPAbility(APIConstants.TPAbilityId.Realmrazer));
-                //Console.WriteLine("Has ability Combo: " + player.HasTPAbility(APIConstants.TPAbilityId.Combo));
-                //Console.WriteLine("Has ability Drain Samba: " + player.HasTPAbility(APIConstants.TPAbilityId.DrainSamba));
-                //Console.WriteLine("Has ability Convert: " + player.HasJobAbility(APIConstants.JobAbilityId.Convert));
-                //foreach (PartyMember member in party.AllianceMembers)
-                //{
-                //    Console.WriteLine("Party Member.Name: " + member.Name);
-                //    Console.WriteLine("Party Member.HP: " + member.CurrentHP);
-                //    Console.WriteLine("Party Member.Active: " + member.Active);
-                //}
-
-                //Console.WriteLine("Container contains: "  + player.HasItemInItems(ItemId.MendiEarring));
-                //foreach (short buffId in player.GetBuffs())
-                //{
-                //    Console.WriteLine("Buff Id: " + buffId);
-                //}
-
-                //int x = 1;
-                //IList<ISpell> allSpells = player.GetAllSpell();
-                //List<ISpell> spells = new List<ISpell>();
-                //foreach (ISpell spell in allSpells)
-                //{
-                //    if (spell?.MagicType == 8)
-                //    {
-                //        string name = spell.Name[0];
-                //        if (name.Length == 0 || name == ".")
-                //        {
-                //            Console.WriteLine("RESERVED" + x.ToString() + " = " + spell.Index + ",");
-                //            x++;
-                //        }
-                //        else
-                //        {
-                //            Console.WriteLine(spell.Name[0] + " = " + spell.Index + ",");
-                //        }
-                //        spells.Add(spell);
-                //    }
-                //}
-                //spells.Sort((a, b) => a.Index.CompareTo(b.Index));
-                //Thread.Sleep(2000);
-                //ExpScript.running = false;
-
-                //List<IItem> sortedItems = new List<IItem>();
-                //for (uint i = 0; i <= 50000; i++) 
-                //{
-                //    IItem item = player.Item(i);
-                //    if (item != null)
-                //    {
-                //        sortedItems.Add(item);
-                //    }
-                //}
-                //sortedItems.Sort((a, b) => a.ItemID.CompareTo(b.ItemID));
-
-                //int x = 1;
-                //foreach (IItem item in sortedItems)
-                //{
-                //    string name = item.Name[0];
-                //    if (name.Length == 0 || name == ".")
-                //    {
-                //        //Console.WriteLine("RESERVED" + x.ToString() + " = " + item.ItemID + ",");
-                //        x++;
-                //    }
-                //    else
-                //    {
-                //        Console.WriteLine(name + " = " + item.ItemID + ",");
-                //    }
-                //    //Console.WriteLine("Ability ID: " + ability.ID);
-                //    //Console.WriteLine("Ability Name0: " + ability.Name[0]);
-                //    //Console.WriteLine("Ability Name1: " + ability.Name[1]);
-                //    //Console.WriteLine("Ability Name2: " + ability.Name[2]);
-                //    //Console.WriteLine("Ability Description: " + ability.Description);
-                //    //Console.WriteLine("Ability MP: " + ability.MP);
-                //    //Console.WriteLine("Ability TP: " + ability.TP);
-                //    //Console.WriteLine("Ability Range: " + ability.Range);
-                //    //Console.WriteLine("Ability MonsterLevel: " + ability.MonsterLevel);
-                //    //Console.WriteLine("Ability TimerID: " + ability.TimerID);
-                //    //Console.WriteLine("Ability ValidTargets: " + ability.ValidTargets);
-                //    //Console.WriteLine("Ability Type: " + ability.Type);
-                //    //Console.WriteLine("Ability Element: " + ability.Element);
-                //    //Console.WriteLine(ability.ToString());
-                //}
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception thrown, stopping bot: " + e.Message);
+            }
+            finally
+            {
+                ExpScript.running = false;
+                aggroMonitorThread.Join();
             }
             Console.WriteLine("Exp Bot has stopped running");
         }
@@ -228,29 +209,56 @@ namespace ExpBot.Scripts
         {
             return ExpScript.running && !aggroed;
         }
-        private void RunToPullDistance(double pullDistance)
-        {
-
-        }
         private void RunToIdleLocation(float idleX, float idleY, float idleZ)
         {
-            if (DistanceToLocation(idleX, idleY, idleZ) > 0.5)
+            RunToLocation(idleX, idleY, idleZ, 3.0f);
+        }
+        private void RunToLocation(float locationX, float locationY, float locationZ, float distanceRadius)
+        {
+            if (DistanceToLocation(locationX, locationY, locationZ) > distanceRadius)
             {
-                player.Move(idleX, idleY, idleZ);
+                player.Move(locationX, locationY, locationZ);
                 Stopwatch stuckWatch = new Stopwatch();
                 stuckWatch.Start();
-                while (ExpScript.running && DistanceToLocation(idleX, idleY, idleZ) > 0.5)
+                while (ExpScript.running && DistanceToLocation(locationX, locationY, locationZ) > distanceRadius)
                 {
                     if (stuckWatch.ElapsedMilliseconds > 1000)
                     {
                         // Try again every second until we get to the actual location.
                         player.Stop();
-                        RunToIdleLocation(idleX, idleY, idleZ);
+                        RunToLocation(locationX, locationY, locationZ, distanceRadius);
                         return;
                     }
                     Thread.Sleep(100);
                 }
                 player.Stop();
+            }
+        }
+        private bool MoveWithinPullDistance(double targetDistance, double distance)
+        {
+            if (targetDistance <= distance)
+            {
+                // Within distance.
+                player.StopMovingBackward();
+                player.StopMovingForward();
+                Thread.Sleep(500); // Cast/JA delay after stopping movement.
+                return false;
+            }
+            else if (targetDistance > distance + 0.5d)
+            {
+                player.StopMovingBackward();
+                player.MoveForward();
+                return true;
+            }
+            else if (targetDistance < distance - 0.5d)
+            {
+                player.StopMovingForward();
+                player.MoveBackward();
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
         private bool MoveWithinDistance(double targetDistance, double distance)
@@ -374,7 +382,15 @@ namespace ExpBot.Scripts
                         }
                         else
                         {
-                            player.CastSpell((uint)trust, "<me>");
+                            if (player.HasTrustSpell(trust))
+                            {
+                                player.CastSpell((uint)trust, "<me>");
+                            }
+                            else
+                            {
+                                throw new Exception("Trust not found: " + trust.ToString());
+                            }
+
                             if (party.PartyMembers.Count == 6)
                             {
                                 break;
@@ -392,7 +408,7 @@ namespace ExpBot.Scripts
         {
             while (ExpScript.running)
             {
-                if (player.GetAggroedTargetId()?.TargetID > 0)
+                if (player.GetAggroedTargetId() > 0)
                 {
                     aggroed = true;
                 }
