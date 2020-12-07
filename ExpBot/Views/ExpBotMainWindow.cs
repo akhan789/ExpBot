@@ -19,16 +19,16 @@ namespace ExpBot.Views
 {
     public partial class ExpBotMainWindow : Form, IExpBotView
     {
-        //private ILog log = LogManager.GetLogger(typeof(ExpBotMainWindow));
+        private ILog log = LogManager.GetLogger(typeof(ExpBotMainWindow));
         private IExpBotPresenter presenter;
         private IExpBotModel model;
         public ExpBotMainWindow()
         {
             InitializeComponent();
-            //ExpBotTextBoxLogAppender.ConfigureExpBotTextBoxLogAppender(txtConsole);
+            ExpBotTextBoxLogAppender.ConfigureExpBotTextBoxLogAppender(txtConsole);
             model = new ExpBotDefaultModel();
             presenter = new ExpBotDefaultPresenter(this, model);
-            //log.Info("ExpBotMainWindow: launching Exp Bot");
+            log.Info("ExpBotMainWindow: launching Exp Bot");
         }
 
         protected override void OnLoad(EventArgs e)
@@ -62,16 +62,22 @@ namespace ExpBot.Views
             }
         }
 
-        private void btnStartStop_Click(object sender, EventArgs e)
+        private void btnStart_Click(object sender, EventArgs e)
         {
             if (presenter.StartStopBot())
             {
-                btnStartStop.Text = "Stop";
+                btnStart.Enabled = false;
+                btnStop.Enabled = true;
             }
-            else
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            if (presenter.StartStopBot())
             {
                 // MessageBox.Show("Load Final Fantasy XI before attempting to start the script");
-                btnStartStop.Text = "Start";
+                btnStart.Enabled = true;
+                btnStop.Enabled = false;
             }
         }
 

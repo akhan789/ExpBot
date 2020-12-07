@@ -86,7 +86,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public void LockOn(TargetWrapper target)
         {
-            while (!target.LockedOn)
+            while (target.HPP > 1 && !target.LockedOn)
             {
                 api.ThirdParty.SendString("/lockon <t>");
                 Thread.Sleep(500);

@@ -111,6 +111,11 @@ namespace ExpBot.Scripts
                                 }
                                 else
                                 {
+                                    if(target.HPP <= 0)
+                                    {
+                                        isPulling = false;
+                                        continue;
+                                    }
                                     player.FaceTarget(target.X, target.Z);
                                     if (!target.LockedOn)
                                     {

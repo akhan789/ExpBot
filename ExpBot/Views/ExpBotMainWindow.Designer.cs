@@ -36,19 +36,22 @@ namespace ExpBot.Views
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.expBotMainWindowPanel = new System.Windows.Forms.Panel();
-            this.btnStartStop = new System.Windows.Forms.Button();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.pnlConsole = new System.Windows.Forms.Panel();
+            this.txtConsole = new System.Windows.Forms.TextBox();
+            this.btnStart = new System.Windows.Forms.Button();
             this.lblTP = new System.Windows.Forms.Label();
             this.lblMP = new System.Windows.Forms.Label();
             this.lblName = new System.Windows.Forms.Label();
             this.lblHP = new System.Windows.Forms.Label();
             this.lblCharacterMP = new System.Windows.Forms.Label();
             this.lblCharacterTP = new System.Windows.Forms.Label();
-            this.txtConsole = new System.Windows.Forms.TextBox();
             this.lblCharacterHP = new System.Windows.Forms.Label();
             this.lblCharacterName = new System.Windows.Forms.Label();
             this.cboProcesses = new System.Windows.Forms.ComboBox();
             this.expBotMainWindowMenuStrip.SuspendLayout();
             this.expBotMainWindowPanel.SuspendLayout();
+            this.pnlConsole.SuspendLayout();
             this.SuspendLayout();
             // 
             // expBotMainWindowMenuStrip
@@ -73,7 +76,7 @@ namespace ExpBot.Views
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(93, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -89,32 +92,65 @@ namespace ExpBot.Views
             this.expBotMainWindowPanel.AutoSize = true;
             this.expBotMainWindowPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.expBotMainWindowPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.expBotMainWindowPanel.Controls.Add(this.btnStartStop);
+            this.expBotMainWindowPanel.Controls.Add(this.btnStop);
+            this.expBotMainWindowPanel.Controls.Add(this.pnlConsole);
+            this.expBotMainWindowPanel.Controls.Add(this.btnStart);
             this.expBotMainWindowPanel.Controls.Add(this.lblTP);
             this.expBotMainWindowPanel.Controls.Add(this.lblMP);
             this.expBotMainWindowPanel.Controls.Add(this.lblName);
             this.expBotMainWindowPanel.Controls.Add(this.lblHP);
             this.expBotMainWindowPanel.Controls.Add(this.lblCharacterMP);
             this.expBotMainWindowPanel.Controls.Add(this.lblCharacterTP);
-            this.expBotMainWindowPanel.Controls.Add(this.txtConsole);
             this.expBotMainWindowPanel.Controls.Add(this.lblCharacterHP);
             this.expBotMainWindowPanel.Controls.Add(this.lblCharacterName);
             this.expBotMainWindowPanel.Controls.Add(this.cboProcesses);
             this.expBotMainWindowPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.expBotMainWindowPanel.Location = new System.Drawing.Point(5, 29);
             this.expBotMainWindowPanel.Name = "expBotMainWindowPanel";
-            this.expBotMainWindowPanel.Size = new System.Drawing.Size(614, 227);
+            this.expBotMainWindowPanel.Size = new System.Drawing.Size(614, 339);
             this.expBotMainWindowPanel.TabIndex = 1;
             // 
-            // btnStartStop
+            // btnStop
             // 
-            this.btnStartStop.Location = new System.Drawing.Point(534, 61);
-            this.btnStartStop.Name = "btnStartStop";
-            this.btnStartStop.Size = new System.Drawing.Size(75, 23);
-            this.btnStartStop.TabIndex = 10;
-            this.btnStartStop.Text = "Start";
-            this.btnStartStop.UseVisualStyleBackColor = true;
-            this.btnStartStop.Click += new System.EventHandler(this.btnStartStop_Click);
+            this.btnStop.Enabled = false;
+            this.btnStop.Location = new System.Drawing.Point(137, 56);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(75, 23);
+            this.btnStop.TabIndex = 12;
+            this.btnStop.Text = "Stop";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            // 
+            // pnlConsole
+            // 
+            this.pnlConsole.Controls.Add(this.txtConsole);
+            this.pnlConsole.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.pnlConsole.Location = new System.Drawing.Point(0, 91);
+            this.pnlConsole.Name = "pnlConsole";
+            this.pnlConsole.Size = new System.Drawing.Size(612, 246);
+            this.pnlConsole.TabIndex = 11;
+            // 
+            // txtConsole
+            // 
+            this.txtConsole.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtConsole.Location = new System.Drawing.Point(0, 0);
+            this.txtConsole.Multiline = true;
+            this.txtConsole.Name = "txtConsole";
+            this.txtConsole.ReadOnly = true;
+            this.txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtConsole.Size = new System.Drawing.Size(612, 246);
+            this.txtConsole.TabIndex = 3;
+            this.txtConsole.WordWrap = false;
+            // 
+            // btnStart
+            // 
+            this.btnStart.Location = new System.Drawing.Point(137, 27);
+            this.btnStart.Name = "btnStart";
+            this.btnStart.Size = new System.Drawing.Size(75, 23);
+            this.btnStart.TabIndex = 10;
+            this.btnStart.Text = "Start";
+            this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
             // lblTP
             // 
@@ -170,14 +206,6 @@ namespace ExpBot.Views
             this.lblCharacterTP.TabIndex = 4;
             this.lblCharacterTP.Text = "Character TP:";
             // 
-            // txtConsole
-            // 
-            this.txtConsole.Location = new System.Drawing.Point(3, 86);
-            this.txtConsole.Multiline = true;
-            this.txtConsole.Name = "txtConsole";
-            this.txtConsole.Size = new System.Drawing.Size(607, 137);
-            this.txtConsole.TabIndex = 3;
-            // 
             // lblCharacterHP
             // 
             this.lblCharacterHP.AutoSize = true;
@@ -211,7 +239,7 @@ namespace ExpBot.Views
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(624, 261);
+            this.ClientSize = new System.Drawing.Size(624, 373);
             this.Controls.Add(this.expBotMainWindowPanel);
             this.Controls.Add(this.expBotMainWindowMenuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -225,6 +253,8 @@ namespace ExpBot.Views
             this.expBotMainWindowMenuStrip.PerformLayout();
             this.expBotMainWindowPanel.ResumeLayout(false);
             this.expBotMainWindowPanel.PerformLayout();
+            this.pnlConsole.ResumeLayout(false);
+            this.pnlConsole.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -245,6 +275,8 @@ namespace ExpBot.Views
         private System.Windows.Forms.Label lblName;
         private System.Windows.Forms.Label lblTP;
         private System.Windows.Forms.Label lblMP;
-        private System.Windows.Forms.Button btnStartStop;
+        private System.Windows.Forms.Button btnStart;
+        private Panel pnlConsole;
+        private Button btnStop;
     }
 }
