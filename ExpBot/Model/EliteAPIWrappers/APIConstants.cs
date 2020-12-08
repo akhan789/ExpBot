@@ -100,6 +100,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             Food = 251,
             Signet = 253,
             MEVADown = 404,
+            IndiRefresh = 541,
             Flurry = 581
         }
         #endregion

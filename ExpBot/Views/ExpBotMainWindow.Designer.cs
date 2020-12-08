@@ -35,33 +35,42 @@ namespace ExpBot.Views
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.expBotMainWindowPanel = new System.Windows.Forms.Panel();
-            this.btnStop = new System.Windows.Forms.Button();
-            this.pnlConsole = new System.Windows.Forms.Panel();
-            this.txtConsole = new System.Windows.Forms.TextBox();
-            this.btnStart = new System.Windows.Forms.Button();
-            this.lblTP = new System.Windows.Forms.Label();
-            this.lblMP = new System.Windows.Forms.Label();
-            this.lblName = new System.Windows.Forms.Label();
-            this.lblHP = new System.Windows.Forms.Label();
-            this.lblCharacterMP = new System.Windows.Forms.Label();
-            this.lblCharacterTP = new System.Windows.Forms.Label();
-            this.lblCharacterHP = new System.Windows.Forms.Label();
-            this.lblCharacterName = new System.Windows.Forms.Label();
             this.cboProcesses = new System.Windows.Forms.ComboBox();
+            this.lblCharacterName = new System.Windows.Forms.Label();
+            this.lblCharacterHP = new System.Windows.Forms.Label();
+            this.lblCharacterTP = new System.Windows.Forms.Label();
+            this.lblCharacterMP = new System.Windows.Forms.Label();
+            this.lblHP = new System.Windows.Forms.Label();
+            this.lblName = new System.Windows.Forms.Label();
+            this.lblMP = new System.Windows.Forms.Label();
+            this.lblTP = new System.Windows.Forms.Label();
+            this.btnStart = new System.Windows.Forms.Button();
+            this.txtConsole = new System.Windows.Forms.TextBox();
+            this.btnStop = new System.Windows.Forms.Button();
+            this.expBotMainWindowPanel = new System.Windows.Forms.Panel();
+            this.tblLayoutPanelControls = new System.Windows.Forms.TableLayoutPanel();
+            this.lblCharacterStatus = new System.Windows.Forms.Label();
+            this.lblStatus = new System.Windows.Forms.Label();
+            this.tblLayoutExpBotMainWindow = new System.Windows.Forms.TableLayoutPanel();
+            this.pnlConsole = new System.Windows.Forms.Panel();
+            this.lblSelectProcess = new System.Windows.Forms.Label();
             this.expBotMainWindowMenuStrip.SuspendLayout();
             this.expBotMainWindowPanel.SuspendLayout();
+            this.tblLayoutPanelControls.SuspendLayout();
+            this.tblLayoutExpBotMainWindow.SuspendLayout();
             this.pnlConsole.SuspendLayout();
             this.SuspendLayout();
             // 
             // expBotMainWindowMenuStrip
             // 
+            this.tblLayoutPanelControls.SetColumnSpan(this.expBotMainWindowMenuStrip, 3);
+            this.expBotMainWindowMenuStrip.Dock = System.Windows.Forms.DockStyle.Fill;
             this.expBotMainWindowMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.aboutToolStripMenuItem});
-            this.expBotMainWindowMenuStrip.Location = new System.Drawing.Point(5, 5);
+            this.expBotMainWindowMenuStrip.Location = new System.Drawing.Point(0, 0);
             this.expBotMainWindowMenuStrip.Name = "expBotMainWindowMenuStrip";
-            this.expBotMainWindowMenuStrip.Size = new System.Drawing.Size(614, 24);
+            this.expBotMainWindowMenuStrip.Size = new System.Drawing.Size(791, 29);
             this.expBotMainWindowMenuStrip.TabIndex = 0;
             this.expBotMainWindowMenuStrip.Text = "expBotMainWindowMenuStrip";
             // 
@@ -70,7 +79,7 @@ namespace ExpBot.Views
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 25);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // exitToolStripMenuItem
@@ -83,165 +92,261 @@ namespace ExpBot.Views
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 25);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // expBotMainWindowPanel
+            // cboProcesses
             // 
-            this.expBotMainWindowPanel.AutoSize = true;
-            this.expBotMainWindowPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.expBotMainWindowPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.expBotMainWindowPanel.Controls.Add(this.btnStop);
-            this.expBotMainWindowPanel.Controls.Add(this.pnlConsole);
-            this.expBotMainWindowPanel.Controls.Add(this.btnStart);
-            this.expBotMainWindowPanel.Controls.Add(this.lblTP);
-            this.expBotMainWindowPanel.Controls.Add(this.lblMP);
-            this.expBotMainWindowPanel.Controls.Add(this.lblName);
-            this.expBotMainWindowPanel.Controls.Add(this.lblHP);
-            this.expBotMainWindowPanel.Controls.Add(this.lblCharacterMP);
-            this.expBotMainWindowPanel.Controls.Add(this.lblCharacterTP);
-            this.expBotMainWindowPanel.Controls.Add(this.lblCharacterHP);
-            this.expBotMainWindowPanel.Controls.Add(this.lblCharacterName);
-            this.expBotMainWindowPanel.Controls.Add(this.cboProcesses);
-            this.expBotMainWindowPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.expBotMainWindowPanel.Location = new System.Drawing.Point(5, 29);
-            this.expBotMainWindowPanel.Name = "expBotMainWindowPanel";
-            this.expBotMainWindowPanel.Size = new System.Drawing.Size(614, 339);
-            this.expBotMainWindowPanel.TabIndex = 1;
+            this.cboProcesses.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.tblLayoutPanelControls.SetColumnSpan(this.cboProcesses, 2);
+            this.cboProcesses.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cboProcesses.FormattingEnabled = true;
+            this.cboProcesses.Location = new System.Drawing.Point(121, 33);
+            this.cboProcesses.Name = "cboProcesses";
+            this.cboProcesses.Size = new System.Drawing.Size(667, 21);
+            this.cboProcesses.TabIndex = 0;
+            this.cboProcesses.SelectedIndexChanged += new System.EventHandler(this.cboProcesses_SelectedIndexChanged);
             // 
-            // btnStop
+            // lblCharacterName
             // 
-            this.btnStop.Enabled = false;
-            this.btnStop.Location = new System.Drawing.Point(137, 56);
-            this.btnStop.Name = "btnStop";
-            this.btnStop.Size = new System.Drawing.Size(75, 23);
-            this.btnStop.TabIndex = 12;
-            this.btnStop.Text = "Stop";
-            this.btnStop.UseVisualStyleBackColor = true;
-            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            this.lblCharacterName.AutoSize = true;
+            this.lblCharacterName.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCharacterName.Location = new System.Drawing.Point(3, 58);
+            this.lblCharacterName.Name = "lblCharacterName";
+            this.lblCharacterName.Size = new System.Drawing.Size(112, 29);
+            this.lblCharacterName.TabIndex = 1;
+            this.lblCharacterName.Text = "Character Name:";
+            this.lblCharacterName.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // pnlConsole
+            // lblCharacterHP
             // 
-            this.pnlConsole.Controls.Add(this.txtConsole);
-            this.pnlConsole.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlConsole.Location = new System.Drawing.Point(0, 91);
-            this.pnlConsole.Name = "pnlConsole";
-            this.pnlConsole.Size = new System.Drawing.Size(612, 246);
-            this.pnlConsole.TabIndex = 11;
+            this.lblCharacterHP.AutoSize = true;
+            this.lblCharacterHP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCharacterHP.Location = new System.Drawing.Point(3, 87);
+            this.lblCharacterHP.Name = "lblCharacterHP";
+            this.lblCharacterHP.Size = new System.Drawing.Size(112, 29);
+            this.lblCharacterHP.TabIndex = 2;
+            this.lblCharacterHP.Text = "Character HP:";
+            this.lblCharacterHP.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // txtConsole
+            // lblCharacterTP
             // 
-            this.txtConsole.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtConsole.Location = new System.Drawing.Point(0, 0);
-            this.txtConsole.Multiline = true;
-            this.txtConsole.Name = "txtConsole";
-            this.txtConsole.ReadOnly = true;
-            this.txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txtConsole.Size = new System.Drawing.Size(612, 246);
-            this.txtConsole.TabIndex = 3;
-            this.txtConsole.WordWrap = false;
+            this.lblCharacterTP.AutoSize = true;
+            this.lblCharacterTP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCharacterTP.Location = new System.Drawing.Point(3, 145);
+            this.lblCharacterTP.Name = "lblCharacterTP";
+            this.lblCharacterTP.Size = new System.Drawing.Size(112, 29);
+            this.lblCharacterTP.TabIndex = 4;
+            this.lblCharacterTP.Text = "Character TP:";
+            this.lblCharacterTP.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // lblCharacterMP
+            // 
+            this.lblCharacterMP.AutoSize = true;
+            this.lblCharacterMP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCharacterMP.Location = new System.Drawing.Point(3, 116);
+            this.lblCharacterMP.Name = "lblCharacterMP";
+            this.lblCharacterMP.Size = new System.Drawing.Size(112, 29);
+            this.lblCharacterMP.TabIndex = 5;
+            this.lblCharacterMP.Text = "Character MP:";
+            this.lblCharacterMP.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // lblHP
+            // 
+            this.lblHP.AutoSize = true;
+            this.lblHP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblHP.Location = new System.Drawing.Point(121, 87);
+            this.lblHP.Name = "lblHP";
+            this.lblHP.Size = new System.Drawing.Size(536, 29);
+            this.lblHP.TabIndex = 6;
+            this.lblHP.Text = "<HP>";
+            this.lblHP.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblName
+            // 
+            this.lblName.AutoSize = true;
+            this.lblName.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblName.Location = new System.Drawing.Point(121, 58);
+            this.lblName.Name = "lblName";
+            this.lblName.Size = new System.Drawing.Size(536, 29);
+            this.lblName.TabIndex = 7;
+            this.lblName.Text = "<Name>";
+            this.lblName.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblMP
+            // 
+            this.lblMP.AutoSize = true;
+            this.lblMP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblMP.Location = new System.Drawing.Point(121, 116);
+            this.lblMP.Name = "lblMP";
+            this.lblMP.Size = new System.Drawing.Size(536, 29);
+            this.lblMP.TabIndex = 8;
+            this.lblMP.Text = "<MP>";
+            this.lblMP.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // lblTP
+            // 
+            this.lblTP.AutoSize = true;
+            this.lblTP.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblTP.Location = new System.Drawing.Point(121, 145);
+            this.lblTP.Name = "lblTP";
+            this.lblTP.Size = new System.Drawing.Size(536, 29);
+            this.lblTP.TabIndex = 9;
+            this.lblTP.Text = "<TP>";
+            this.lblTP.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(137, 27);
+            this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStart.Location = new System.Drawing.Point(713, 90);
             this.btnStart.Name = "btnStart";
+            this.tblLayoutPanelControls.SetRowSpan(this.btnStart, 2);
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 10;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
-            // lblTP
+            // txtConsole
             // 
-            this.lblTP.AutoSize = true;
-            this.lblTP.Location = new System.Drawing.Point(84, 66);
-            this.lblTP.Name = "lblTP";
-            this.lblTP.Size = new System.Drawing.Size(33, 13);
-            this.lblTP.TabIndex = 9;
-            this.lblTP.Text = "<TP>";
+            this.txtConsole.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtConsole.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtConsole.Location = new System.Drawing.Point(0, 0);
+            this.txtConsole.Multiline = true;
+            this.txtConsole.Name = "txtConsole";
+            this.txtConsole.ReadOnly = true;
+            this.txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.txtConsole.Size = new System.Drawing.Size(791, 496);
+            this.txtConsole.TabIndex = 3;
+            this.txtConsole.WordWrap = false;
             // 
-            // lblMP
+            // btnStop
             // 
-            this.lblMP.AutoSize = true;
-            this.lblMP.Location = new System.Drawing.Point(84, 53);
-            this.lblMP.Name = "lblMP";
-            this.lblMP.Size = new System.Drawing.Size(35, 13);
-            this.lblMP.TabIndex = 8;
-            this.lblMP.Text = "<MP>";
+            this.btnStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnStop.Enabled = false;
+            this.btnStop.Location = new System.Drawing.Point(713, 148);
+            this.btnStop.Name = "btnStop";
+            this.tblLayoutPanelControls.SetRowSpan(this.btnStop, 2);
+            this.btnStop.Size = new System.Drawing.Size(75, 23);
+            this.btnStop.TabIndex = 12;
+            this.btnStop.Text = "Stop";
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
-            // lblName
+            // expBotMainWindowPanel
             // 
-            this.lblName.AutoSize = true;
-            this.lblName.Location = new System.Drawing.Point(84, 27);
-            this.lblName.Name = "lblName";
-            this.lblName.Size = new System.Drawing.Size(47, 13);
-            this.lblName.TabIndex = 7;
-            this.lblName.Text = "<Name>";
+            this.expBotMainWindowPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.expBotMainWindowPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.expBotMainWindowPanel.Controls.Add(this.tblLayoutPanelControls);
+            this.expBotMainWindowPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.expBotMainWindowPanel.Location = new System.Drawing.Point(3, 3);
+            this.expBotMainWindowPanel.Name = "expBotMainWindowPanel";
+            this.expBotMainWindowPanel.Size = new System.Drawing.Size(793, 212);
+            this.expBotMainWindowPanel.TabIndex = 1;
             // 
-            // lblHP
+            // tblLayoutPanelControls
             // 
-            this.lblHP.AutoSize = true;
-            this.lblHP.Location = new System.Drawing.Point(84, 40);
-            this.lblHP.Name = "lblHP";
-            this.lblHP.Size = new System.Drawing.Size(34, 13);
-            this.lblHP.TabIndex = 6;
-            this.lblHP.Text = "<HP>";
+            this.tblLayoutPanelControls.ColumnCount = 3;
+            this.tblLayoutPanelControls.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
+            this.tblLayoutPanelControls.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 68.64729F));
+            this.tblLayoutPanelControls.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 16.43489F));
+            this.tblLayoutPanelControls.Controls.Add(this.expBotMainWindowMenuStrip, 0, 0);
+            this.tblLayoutPanelControls.Controls.Add(this.lblCharacterStatus, 0, 6);
+            this.tblLayoutPanelControls.Controls.Add(this.lblStatus, 1, 6);
+            this.tblLayoutPanelControls.Controls.Add(this.lblCharacterTP, 0, 5);
+            this.tblLayoutPanelControls.Controls.Add(this.lblTP, 1, 5);
+            this.tblLayoutPanelControls.Controls.Add(this.lblCharacterMP, 0, 4);
+            this.tblLayoutPanelControls.Controls.Add(this.lblMP, 1, 4);
+            this.tblLayoutPanelControls.Controls.Add(this.lblCharacterHP, 0, 3);
+            this.tblLayoutPanelControls.Controls.Add(this.lblHP, 1, 3);
+            this.tblLayoutPanelControls.Controls.Add(this.lblCharacterName, 0, 2);
+            this.tblLayoutPanelControls.Controls.Add(this.lblName, 1, 2);
+            this.tblLayoutPanelControls.Controls.Add(this.cboProcesses, 1, 1);
+            this.tblLayoutPanelControls.Controls.Add(this.lblSelectProcess, 0, 1);
+            this.tblLayoutPanelControls.Controls.Add(this.btnStart, 2, 2);
+            this.tblLayoutPanelControls.Controls.Add(this.btnStop, 2, 5);
+            this.tblLayoutPanelControls.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tblLayoutPanelControls.Location = new System.Drawing.Point(0, 0);
+            this.tblLayoutPanelControls.Name = "tblLayoutPanelControls";
+            this.tblLayoutPanelControls.RowCount = 7;
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 14.28571F));
+            this.tblLayoutPanelControls.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tblLayoutPanelControls.Size = new System.Drawing.Size(791, 210);
+            this.tblLayoutPanelControls.TabIndex = 1;
             // 
-            // lblCharacterMP
+            // lblCharacterStatus
             // 
-            this.lblCharacterMP.AutoSize = true;
-            this.lblCharacterMP.Location = new System.Drawing.Point(3, 53);
-            this.lblCharacterMP.Name = "lblCharacterMP";
-            this.lblCharacterMP.Size = new System.Drawing.Size(75, 13);
-            this.lblCharacterMP.TabIndex = 5;
-            this.lblCharacterMP.Text = "Character MP:";
+            this.lblCharacterStatus.AutoSize = true;
+            this.lblCharacterStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblCharacterStatus.Location = new System.Drawing.Point(3, 174);
+            this.lblCharacterStatus.Name = "lblCharacterStatus";
+            this.lblCharacterStatus.Size = new System.Drawing.Size(112, 36);
+            this.lblCharacterStatus.TabIndex = 13;
+            this.lblCharacterStatus.Text = "Character Status:";
+            this.lblCharacterStatus.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // lblCharacterTP
+            // lblStatus
             // 
-            this.lblCharacterTP.AutoSize = true;
-            this.lblCharacterTP.Location = new System.Drawing.Point(3, 66);
-            this.lblCharacterTP.Name = "lblCharacterTP";
-            this.lblCharacterTP.Size = new System.Drawing.Size(73, 13);
-            this.lblCharacterTP.TabIndex = 4;
-            this.lblCharacterTP.Text = "Character TP:";
+            this.lblStatus.AutoSize = true;
+            this.lblStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblStatus.Location = new System.Drawing.Point(121, 174);
+            this.lblStatus.Name = "lblStatus";
+            this.lblStatus.Size = new System.Drawing.Size(536, 36);
+            this.lblStatus.TabIndex = 14;
+            this.lblStatus.Text = "<Status>";
+            this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // lblCharacterHP
+            // tblLayoutExpBotMainWindow
             // 
-            this.lblCharacterHP.AutoSize = true;
-            this.lblCharacterHP.Location = new System.Drawing.Point(3, 40);
-            this.lblCharacterHP.Name = "lblCharacterHP";
-            this.lblCharacterHP.Size = new System.Drawing.Size(74, 13);
-            this.lblCharacterHP.TabIndex = 2;
-            this.lblCharacterHP.Text = "Character HP:";
+            this.tblLayoutExpBotMainWindow.ColumnCount = 1;
+            this.tblLayoutExpBotMainWindow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tblLayoutExpBotMainWindow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tblLayoutExpBotMainWindow.Controls.Add(this.pnlConsole, 0, 1);
+            this.tblLayoutExpBotMainWindow.Controls.Add(this.expBotMainWindowPanel, 0, 0);
+            this.tblLayoutExpBotMainWindow.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tblLayoutExpBotMainWindow.Location = new System.Drawing.Point(5, 5);
+            this.tblLayoutExpBotMainWindow.Name = "tblLayoutExpBotMainWindow";
+            this.tblLayoutExpBotMainWindow.RowCount = 2;
+            this.tblLayoutExpBotMainWindow.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 30.28169F));
+            this.tblLayoutExpBotMainWindow.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 69.71831F));
+            this.tblLayoutExpBotMainWindow.Size = new System.Drawing.Size(799, 722);
+            this.tblLayoutExpBotMainWindow.TabIndex = 2;
             // 
-            // lblCharacterName
+            // pnlConsole
             // 
-            this.lblCharacterName.AutoSize = true;
-            this.lblCharacterName.Location = new System.Drawing.Point(3, 27);
-            this.lblCharacterName.Name = "lblCharacterName";
-            this.lblCharacterName.Size = new System.Drawing.Size(87, 13);
-            this.lblCharacterName.TabIndex = 1;
-            this.lblCharacterName.Text = "Character Name:";
+            this.pnlConsole.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.pnlConsole.Controls.Add(this.txtConsole);
+            this.pnlConsole.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlConsole.Location = new System.Drawing.Point(3, 221);
+            this.pnlConsole.Name = "pnlConsole";
+            this.pnlConsole.Size = new System.Drawing.Size(793, 498);
+            this.pnlConsole.TabIndex = 12;
             // 
-            // cboProcesses
+            // lblSelectProcess
             // 
-            this.cboProcesses.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cboProcesses.FormattingEnabled = true;
-            this.cboProcesses.Location = new System.Drawing.Point(3, 3);
-            this.cboProcesses.Name = "cboProcesses";
-            this.cboProcesses.Size = new System.Drawing.Size(607, 21);
-            this.cboProcesses.TabIndex = 0;
-            this.cboProcesses.SelectedIndexChanged += new System.EventHandler(this.cboProcesses_SelectedIndexChanged);
+            this.lblSelectProcess.AutoSize = true;
+            this.lblSelectProcess.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lblSelectProcess.Location = new System.Drawing.Point(3, 29);
+            this.lblSelectProcess.Name = "lblSelectProcess";
+            this.lblSelectProcess.Size = new System.Drawing.Size(112, 29);
+            this.lblSelectProcess.TabIndex = 15;
+            this.lblSelectProcess.Text = "Process:";
+            this.lblSelectProcess.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // ExpBotMainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(624, 373);
-            this.Controls.Add(this.expBotMainWindowPanel);
-            this.Controls.Add(this.expBotMainWindowMenuStrip);
+            this.ClientSize = new System.Drawing.Size(809, 732);
+            this.Controls.Add(this.tblLayoutExpBotMainWindow);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.expBotMainWindowMenuStrip;
             this.MinimumSize = new System.Drawing.Size(640, 39);
@@ -252,11 +357,12 @@ namespace ExpBot.Views
             this.expBotMainWindowMenuStrip.ResumeLayout(false);
             this.expBotMainWindowMenuStrip.PerformLayout();
             this.expBotMainWindowPanel.ResumeLayout(false);
-            this.expBotMainWindowPanel.PerformLayout();
+            this.tblLayoutPanelControls.ResumeLayout(false);
+            this.tblLayoutPanelControls.PerformLayout();
+            this.tblLayoutExpBotMainWindow.ResumeLayout(false);
             this.pnlConsole.ResumeLayout(false);
             this.pnlConsole.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -264,19 +370,24 @@ namespace ExpBot.Views
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.Panel expBotMainWindowPanel;
-        private System.Windows.Forms.ComboBox cboProcesses;
-        private System.Windows.Forms.TextBox txtConsole;
-        private System.Windows.Forms.Label lblCharacterHP;
-        private System.Windows.Forms.Label lblCharacterName;
-        private System.Windows.Forms.Label lblCharacterTP;
-        private System.Windows.Forms.Label lblCharacterMP;
-        private System.Windows.Forms.Label lblHP;
-        private System.Windows.Forms.Label lblName;
-        private System.Windows.Forms.Label lblTP;
-        private System.Windows.Forms.Label lblMP;
-        private System.Windows.Forms.Button btnStart;
-        private Panel pnlConsole;
+        private ComboBox cboProcesses;
+        private Label lblCharacterName;
+        private Label lblCharacterHP;
+        private Label lblCharacterTP;
+        private Label lblCharacterMP;
+        private Label lblHP;
+        private Label lblName;
+        private Label lblMP;
+        private Label lblTP;
+        private Button btnStart;
+        private TextBox txtConsole;
         private Button btnStop;
+        private Panel expBotMainWindowPanel;
+        private TableLayoutPanel tblLayoutExpBotMainWindow;
+        private Panel pnlConsole;
+        private Label lblCharacterStatus;
+        private Label lblStatus;
+        private TableLayoutPanel tblLayoutPanelControls;
+        private Label lblSelectProcess;
     }
 }

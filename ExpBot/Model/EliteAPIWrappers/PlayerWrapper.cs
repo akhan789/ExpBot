@@ -64,7 +64,13 @@ namespace ExpBot.Model.EliteAPIWrappers
         //}
         public bool HasBuff(short id)
         {
-            // TODO:
+            foreach (short buff in GetBuffs())
+            {
+                if (buff == id)
+                {
+                    return true;
+                }
+            }
             return false;
         }
         public short[] GetBuffs()
@@ -294,6 +300,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             {
                 throw new Exception("Not enough MP");
             }
+            Thread.Sleep(1000);
             api.ThirdParty.SendString("/ma \"" + spell.Name[0] + "\" " + target);
             int castTime = spell.CastTime;
             Stopwatch spellTimeoutWatch = new Stopwatch();

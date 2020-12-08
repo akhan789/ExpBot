@@ -52,10 +52,10 @@ namespace ExpBot.Scripts
             const int CureVHealHP = 30;
             const int WeaponSkillTP = 1000;
             const TPAbilityId WeaponSkillId = TPAbilityId.Realmrazer;
-            const double MeleeRange = 3.0d;
+            const double MeleeRange = 2.0d;
             const double PullDistance = 18.0d;
             const float PullSearchRadius = 50.0f;
-            const string MonsterName = "Sinewy Matamata";
+            const string MonsterName = "Frosty Twitherym";
             float initialPlayerX = player.X;
             float initialPlayerY = player.Y;
             float initialPlayerZ = player.Z;
@@ -93,6 +93,7 @@ namespace ExpBot.Scripts
                                     }
                                     RestMPIfNecessary(RestMPP);
                                     // equip exp/cap point enhancing gear.
+                                    CastGEOSpellsIfNecessary();
                                     HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
                                     SummonTrustsIfNecessary(trusts);
                                     int targetId;
@@ -111,7 +112,7 @@ namespace ExpBot.Scripts
                                 }
                                 else
                                 {
-                                    if(target.HPP <= 0)
+                                    if (target.HPP <= 0)
                                     {
                                         isPulling = false;
                                         continue;
@@ -181,7 +182,14 @@ namespace ExpBot.Scripts
                                 if (!isMoving)
                                 {
                                     HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
-                                    UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                    if (target.Distance > MeleeRange + 0.5d)
+                                    {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                    }
                                 }
                             }
                             break;
@@ -209,7 +217,6 @@ namespace ExpBot.Scripts
             }
             Console.WriteLine("Exp Bot has stopped running");
         }
-
         private bool IsRunningAndNotAggroed()
         {
             return ExpScript.running && !aggroed;
@@ -317,6 +324,13 @@ namespace ExpBot.Scripts
                         Thread.Sleep(100);
                     }
                 }
+            }
+        }
+        private void CastGEOSpellsIfNecessary()
+        {
+            if (!player.HasBuff((short)APIConstants.StatusEffect.IndiRefresh))
+            {
+                player.CastSpell((uint)GeomancySpellId.IndiRefresh, "<me>");
             }
         }
         private void HealHPIfNecessary(int cureIIIHP, int cureIVHP, int cureVHP)
