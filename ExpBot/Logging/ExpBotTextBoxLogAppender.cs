@@ -14,7 +14,6 @@ namespace ExpBot.Logging
     {
         private TextBox txtConsole;
         private readonly object lockObj = new object();
-
         public ExpBotTextBoxLogAppender(TextBox txtConsole)
         {
             Form form = txtConsole.FindForm();
@@ -38,7 +37,6 @@ namespace ExpBot.Logging
         {
             ((Hierarchy)LogManager.GetRepository()).Root.AddAppender(new ExpBotTextBoxLogAppender(txtConsole));
         }
-
         public void Close()
         {
             try
@@ -54,7 +52,6 @@ namespace ExpBot.Logging
             {
             }
         }
-
         public void DoAppend(LoggingEvent loggingEvent)
         {
             try

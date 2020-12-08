@@ -1,4 +1,5 @@
 ﻿using ExpBot.Model.EliteAPIWrappers;
+using ExpBot.Scripts;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +13,7 @@ namespace ExpBot.Model
         IList<Process> POLProcesses { get; }
         Process CurrentPOLProcess { get; set; }
         void Unload();
+        IScript Script { get; set; }
         PlayerWrapper Player { get; set; }
         TargetWrapper Target { get; set; }
         PartyWrapper Party { get; set; }

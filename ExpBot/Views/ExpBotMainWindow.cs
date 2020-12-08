@@ -32,7 +32,6 @@ namespace ExpBot.Views
 
         protected override void OnLoad(EventArgs e)
         {
-            //lblCharacterHP.DataBindings.Add(new Binding("Text", model, nameof(model.Player)));
             presenter.OnLoad();
         }
 
@@ -84,6 +83,18 @@ namespace ExpBot.Views
             }
         }
 
+        private void chkAlwaysOnTop_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkAlwaysOnTop.Checked)
+            {
+                TopMost = true;
+            }
+            else
+            {
+                TopMost = false;
+            }
+        }
+
         public void UpdatePOLProcessList()
         {
             cboProcesses.Invoke(new MethodInvoker(delegate
@@ -96,6 +107,39 @@ namespace ExpBot.Views
                 cboProcesses.DisplayMember = "MainWindowTitle";
                 cboProcesses.ValueMember = "Id";
             }));
+        }
+
+        public void UpdatePlayerDetails()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                    lblName.Text = model.Player.Name;
+                    lblHP.Text = model.Player.HP.ToString() + "/" + model.Player.MaxHP.ToString();
+                    lblMP.Text = model.Player.MP.ToString() + "/" + model.Player.MaxMP.ToString();
+                    lblTP.Text = model.Player.TP.ToString();
+                    lblStatus.Text = model.Player.PlayerStatus.ToString();
+                }));
+            }
+        }
+        public void UpdateTargetDetails()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                }));
+            }
+        }
+        public void UpdatePartyDetails()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                }));
+            }
         }
     }
 }

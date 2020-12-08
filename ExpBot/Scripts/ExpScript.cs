@@ -14,9 +14,9 @@ using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.Scripts
 {
-    public class ExpScript
+    public class ExpScript : IScript
     {
-        public static bool running;
+        public bool running;
         private bool aggroed = false;
         // Use this Regex any time we need to compare an in-game thing vs an Enum name
         // e.g. Apururu vs Apururu (UC); or Mecisto. Mantle vs MecistoMantle.
@@ -32,18 +32,20 @@ namespace ExpBot.Scripts
         }
         ~ExpScript()
         {
-            ExpScript.running = false;
+            Running = false;
         }
         public void Run()
         {
             // Parameters - TODO: Make these all configurable via UI.
             TrustSpellId[] trusts = {
-                TrustSpellId.Gessho,
-                //TrustSpellId.ApururuUC,
-                TrustSpellId.Cherukiki,
+                //TrustSpellId.Gessho,
+                TrustSpellId.August,
+                TrustSpellId.ApururuUC,
+                //TrustSpellId.Cherukiki,
                 TrustSpellId.ShantottoII,
                 TrustSpellId.Kupofried,
-                TrustSpellId.Selhteus
+                //TrustSpellId.Selhteus,
+                TrustSpellId.Qultada
             };
             const uint RestMPP = 20;
             const uint PullSpell = (uint)BlackMagicSpellId.Stone;
@@ -56,9 +58,7 @@ namespace ExpBot.Scripts
             const double PullDistance = 18.0d;
             const float PullSearchRadius = 50.0f;
             const string MonsterName = "Frosty Twitherym";
-            float initialPlayerX = player.X;
-            float initialPlayerY = player.Y;
-            float initialPlayerZ = player.Z;
+            Location idleLocation = new Location(player.X, player.Y, player.Z);
 
             // Start the aggro monitor thread.
             Thread aggroMonitorThread = new Thread(new ThreadStart(AggroMonitor));
@@ -66,30 +66,26 @@ namespace ExpBot.Scripts
             aggroMonitorThread.Start();
 
             // Actual Bot
-            bool isMoving = false;
-            bool isPulling = false;
             try
             {
-                while (ExpScript.running)
+                while (Running)
                 {
                     player.StopMovingBackward();
                     player.StopMovingForward();
                     switch (player.PlayerStatus)
                     {
                         case (uint)Status.Resting:
-                            //Console.WriteLine("Player status: Resting");
                             player.Heal(); // Stand back up.
                             break;
                         case (uint)Status.Idle:
-                            //Console.WriteLine("Player status: Idle");
                             if (IsRunningAndNotAggroed())
                             {
-                                if (!isPulling)
+                                if (!player.Pulling)
                                 {
                                     player.SetTarget(0);
-                                    if (DistanceToLocation(initialPlayerX, initialPlayerY, initialPlayerZ) > 3.0f)
+                                    if (DistanceToLocation(idleLocation) > 3.0f)
                                     {
-                                        RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
+                                        RunToLocation(idleLocation, 3.0f);
                                     }
                                     RestMPIfNecessary(RestMPP);
                                     // equip exp/cap point enhancing gear.
@@ -100,21 +96,18 @@ namespace ExpBot.Scripts
                                     if ((targetId = player.GetClosestTargetIdByName(MonsterName, PullSearchRadius)) > 0)
                                     {
                                         player.SetTarget(targetId);
-                                        //Console.WriteLine("Player SetTarget: " + targetId);
-                                        //Console.WriteLine("Player isPulling: " + isPulling);
-                                        isPulling = true;
+                                        player.Pulling = true;
                                     }
                                     else
                                     {
-                                        //Console.WriteLine("Player isPulling: " + isPulling);
-                                        isPulling = false;
+                                        player.Pulling = false;
                                     }
                                 }
                                 else
                                 {
                                     if (target.HPP <= 0)
                                     {
-                                        isPulling = false;
+                                        player.Pulling = false;
                                         continue;
                                     }
                                     player.FaceTarget(target.X, target.Z);
@@ -122,64 +115,65 @@ namespace ExpBot.Scripts
                                     {
                                         player.LockOn(target);
                                     }
-                                    //Console.WriteLine("Player LockOn");
-                                    isMoving = MoveWithinPullDistance(target.Distance, PullDistance);
-                                    if (!isMoving)
+                                    player.Moving = MoveWithinPullDistance(target.Distance, PullDistance);
+                                    if (!player.Moving)
                                     {
-                                        //Console.WriteLine("Player not moving");
                                         if (target.HPP <= 1)
                                         {
                                             int targetId;
                                             if ((targetId = player.GetClosestTargetIdByName(MonsterName, PullSearchRadius)) > 0)
                                             {
                                                 player.SetTarget(targetId);
-                                                //Console.WriteLine("Player SetTarget: " + targetId);
                                                 continue;
                                             }
                                         }
+                                        bool outOfRange = false;
                                         while (IsRunningAndNotAggroed() && !player.CastSpell(PullSpell, "<t>"))
                                         {
                                             Thread.Sleep(100);
+                                            if (target.Distance > PullDistance)
+                                            {
+                                                outOfRange = true;
+                                                break;
+                                            }
                                         }
-                                        if (target.LockedOn)
+                                        if (outOfRange)
+                                        {
+                                            continue;
+                                        }
+                                        if (DistanceToLocation(idleLocation) > 3.0f && target.LockedOn)
                                         {
                                             player.UnLockOn(target);
                                         }
-                                        //Console.WriteLine("Player Unlock");
-                                        RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
+                                        RunToLocation(idleLocation, 3.0f);
                                         player.Attack(target);
-                                        //Console.WriteLine("Player Attacking");
-                                        isPulling = false;
-                                        //Console.WriteLine("Player isPulling: " + isPulling);
+                                        player.Pulling = false;
                                     }
                                 }
                             }
                             else
                             {
-                                if (DistanceToLocation(initialPlayerX, initialPlayerY, initialPlayerZ) > 3.0f)
+                                if (DistanceToLocation(idleLocation) > 3.0f)
                                 {
-                                    RunToIdleLocation(initialPlayerX, initialPlayerY, initialPlayerZ);
+                                    RunToLocation(idleLocation, 3.0f);
                                 }
                                 uint targetId;
-                                if (ExpScript.running && (targetId = player.GetAggroedTargetId()) > 0)
+                                if (Running && (targetId = player.GetAggroedTargetId()) > 0)
                                 {
                                     player.SetTarget((int)targetId);
-                                    //Console.WriteLine("Player SetTarget: " + targetId);
                                     if (target.HPP > 1)
                                     {
                                         player.Attack(target);
                                     }
-                                    //Console.WriteLine("Player Attacking aggro");
                                 }
                             }
                             break;
                         case (uint)Status.InCombat:
-                            //Console.WriteLine("Player status: InCombat");
                             if (target.HPP > 1)
                             {
                                 player.FaceTarget(target.X, target.Z);
-                                isMoving = MoveWithinDistance(target.Distance, MeleeRange);
-                                if (!isMoving)
+                                player.Moving = MoveWithinDistance(target.Distance, MeleeRange);
+                                if (!player.Moving)
                                 {
                                     HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
                                     if (target.Distance > MeleeRange + 0.5d)
@@ -196,13 +190,12 @@ namespace ExpBot.Scripts
                         case (uint)Status.Dead:
                             Console.WriteLine("Player status: Dead");
                             player.DeathWarp();
-                            ExpScript.running = false; // Kill the bot, we're done.
+                            Running = false; // Kill the bot, we're done.
                             break;
                         default:
                             Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
                             break;
                     }
-
                     Thread.Sleep(500);
                 }
             }
@@ -212,33 +205,33 @@ namespace ExpBot.Scripts
             }
             finally
             {
-                ExpScript.running = false;
+                Running = false;
                 aggroMonitorThread.Join();
             }
             Console.WriteLine("Exp Bot has stopped running");
         }
         private bool IsRunningAndNotAggroed()
         {
-            return ExpScript.running && !aggroed;
+            return Running && !aggroed;
         }
-        private void RunToIdleLocation(float idleX, float idleY, float idleZ)
+        private double DistanceToLocation(Location location)
         {
-            RunToLocation(idleX, idleY, idleZ, 3.0f);
+            return Math.Truncate(Math.Sqrt(Math.Pow((location.X - player.X), 2.0d) + Math.Pow((location.Z - player.Z), 2.0d) + Math.Pow((location.Y - player.Y), 2.0d)));
         }
-        private void RunToLocation(float locationX, float locationY, float locationZ, float distanceRadius)
+        private void RunToLocation(Location location, float distanceRadius)
         {
-            if (DistanceToLocation(locationX, locationY, locationZ) > distanceRadius)
+            if (DistanceToLocation(location) > distanceRadius)
             {
-                player.Move(locationX, locationY, locationZ);
+                player.Move(location.X, location.Y, location.Z);
                 Stopwatch stuckWatch = new Stopwatch();
                 stuckWatch.Start();
-                while (ExpScript.running && DistanceToLocation(locationX, locationY, locationZ) > distanceRadius)
+                while (Running && DistanceToLocation(location) > distanceRadius)
                 {
                     if (stuckWatch.ElapsedMilliseconds > 1000)
                     {
                         // Try again every second until we get to the actual location.
                         player.Stop();
-                        RunToLocation(locationX, locationY, locationZ, distanceRadius);
+                        RunToLocation(location, distanceRadius);
                         return;
                     }
                     Thread.Sleep(100);
@@ -328,7 +321,7 @@ namespace ExpBot.Scripts
         }
         private void CastGEOSpellsIfNecessary()
         {
-            if (!player.HasBuff((short)APIConstants.StatusEffect.IndiRefresh))
+            if (!player.HasStatusEffect((short)APIConstants.StatusEffect.IndiRefresh))
             {
                 player.CastSpell((uint)GeomancySpellId.IndiRefresh, "<me>");
             }
@@ -338,7 +331,7 @@ namespace ExpBot.Scripts
             int partyMember = 0;
             foreach (PartyMember member in party.PartyMembers)
             {
-                if (!ExpScript.running || player.PlayerStatus == (uint)Status.Idle && aggroed)
+                if (!Running || player.PlayerStatus == (uint)Status.Idle && aggroed)
                 {
                     break;
                 }
@@ -419,13 +412,9 @@ namespace ExpBot.Scripts
                 }
             }
         }
-        private double DistanceToLocation(float locationX, float locationY, float locationZ)
-        {
-            return Math.Truncate(Math.Sqrt(Math.Pow((locationX - player.X), 2.0d) + Math.Pow((locationZ - player.Z), 2.0d) + Math.Pow((locationY - player.Y), 2.0d)));
-        }
         private void AggroMonitor()
         {
-            while (ExpScript.running)
+            while (Running)
             {
                 if (player.GetAggroedTargetId() > 0)
                 {
@@ -436,6 +425,38 @@ namespace ExpBot.Scripts
                     aggroed = false;
                 }
                 Thread.Sleep(100);
+            }
+        }
+        public bool Running
+        {
+            get => running;
+            set => running = value;
+        }
+        private class Location
+        {
+            private float x;
+            private float y;
+            private float z;
+            public Location(float locationX, float locationY, float locationZ)
+            {
+                X = locationX;
+                Y = locationY;
+                Z = locationZ;
+            }
+            public float X
+            {
+                get => x;
+                set => x = value;
+            }
+            public float Y
+            {
+                get => y;
+                set => y = value;
+            }
+            public float Z
+            {
+                get => z;
+                set => z = value;
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using EliteMMO.API;
 using ExpBot.Model.EliteAPIWrappers;
+using ExpBot.Scripts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -11,11 +12,12 @@ using System.Windows.Forms;
 
 namespace ExpBot.Model
 {
-    public class ExpBotDefaultModel : IExpBotModel, INotifyPropertyChanged
+    public class ExpBotDefaultModel : IExpBotModel
     {
         private static EliteAPI api;
         private Process currentPOLProcess;
         private IList<Process> currentProcesses;
+        private IScript script;
         private PlayerWrapper player;
         private TargetWrapper target;
         private PartyWrapper party;
@@ -25,11 +27,6 @@ namespace ExpBot.Model
         public IList<Process> POLProcesses
         {
             get => CurrentProcesses = Process.GetProcessesByName(Path.GetFileNameWithoutExtension("pol"));
-        }
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected virtual void OnPropertyChanged(string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         public Process CurrentPOLProcess
         {
@@ -71,13 +68,17 @@ namespace ExpBot.Model
                 throw new Exception("POL Process not found when initialise called");
             }
         }
+        public IScript Script
+        {
+            get => script;
+            set => script = value;
+        }
         public PlayerWrapper Player
         {
             get => player;
             set
             {
                 player = value;
-                OnPropertyChanged("Player");
             }
         }
         public TargetWrapper Target
@@ -86,7 +87,6 @@ namespace ExpBot.Model
             set
             {
                 target = value;
-                OnPropertyChanged("Target");
             }
         }
         public PartyWrapper Party
@@ -95,7 +95,6 @@ namespace ExpBot.Model
             set
             {
                 party = value;
-                OnPropertyChanged("Party");
             }
         }
     }

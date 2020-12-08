@@ -15,6 +15,7 @@ namespace ExpBot.ViewModel
     {
         private IExpBotView view;
         private IExpBotModel model;
+        private Thread botThread;
         public bool initialised;
         public ExpBotDefaultPresenter(IExpBotView view, IExpBotModel model)
         {
@@ -29,31 +30,50 @@ namespace ExpBot.ViewModel
         }
         public void Close()
         {
-            ExpScript.running = false;
             model.Unload();
         }
         public bool StartStopBot()
         {
+            IScript script = model.Script;
             if (Initialised)
             {
-                ExpScript script;
-                if (!ExpScript.running && (script = new ExpScript(model.Player, model.Target, model.Party)) != null)
+                if (script == null || !script.Running)
                 {
-                    ExpScript.running = true;
-                    Thread botThread = new Thread(new ThreadStart(script.Run));
+                    model.Script = script = new ExpScript(model.Player, model.Target, model.Party);
+                    script.Running = true;
+
+                    botThread = new Thread(new ThreadStart(script.Run));
                     botThread.IsBackground = true;
                     botThread.Start();
-                    return ExpScript.running;
+                    return script.Running;
                 }
                 else
                 {
-                    model.Unload();
-                    return ExpScript.running = false;
+                    script.Running = false;
+                    if (botThread != null)
+                    {
+                        botThread.Interrupt();
+                        botThread.Join();
+                    }
+                    return script.Running;
                 }
             }
             else
             {
-                return ExpScript.running = false;
+                if (script != null || botThread != null)
+                {
+                    if (script != null)
+                    {
+                        script.Running = false;
+                        model.Script = null;
+                    }
+                    if (botThread != null)
+                    {
+                        botThread.Interrupt();
+                        botThread.Join();
+                    }
+                }
+                return false;
             }
         }
         public void Initialise(Process process)
@@ -63,6 +83,9 @@ namespace ExpBot.ViewModel
                 if (model.CurrentPOLProcess?.Id != process.Id)
                 {
                     model.CurrentPOLProcess = process;
+                    model.Player.PropertyChanged += Player_PropertyChanged;
+                    model.Target.PropertyChanged += Target_PropertyChanged;
+                    model.Party.PropertyChanged += Party_PropertyChanged;
                     Initialised = true;
                 }
             }
@@ -72,6 +95,7 @@ namespace ExpBot.ViewModel
                 Initialised = false;
             }
         }
+
         public void POLProcessMonitor()
         {
             int initialPOLProcessCount = 0;
@@ -93,6 +117,18 @@ namespace ExpBot.ViewModel
             {
                 initialised = value;
             }
+        }
+        private void Player_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdatePlayerDetails();
+        }
+        private void Target_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdateTargetDetails();
+        }
+        private void Party_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdatePartyDetails();
         }
     }
 }

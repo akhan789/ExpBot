@@ -1,18 +1,29 @@
 ﻿using EliteMMO.API;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using static EliteMMO.API.EliteAPI;
 
 namespace ExpBot.Model.EliteAPIWrappers
 {
-    public class PartyWrapper : APIConstants
+    public class PartyWrapper : APIConstants, INotifyPropertyChanged
     {
         private static EliteAPI api;
         public PartyWrapper(EliteAPI api)
         {
             PartyWrapper.api = api;
+
+            Thread partyMonitorThread = new Thread(PartyMonitor);
+            partyMonitorThread.IsBackground = true;
+            partyMonitorThread.Start();
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         public void SetParty(string propertyName, params object[] properties)
         {
@@ -76,6 +87,13 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             get => api.Party.GetPartyMember(5);
             set => SetParty("PartyMember", value);
+        }
+        private void PartyMonitor()
+        {
+            while (true)
+            {
+                Thread.Sleep(100);
+            }
         }
     }
 }

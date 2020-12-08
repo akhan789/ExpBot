@@ -1,6 +1,7 @@
 ﻿using EliteMMO.API;
 using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -8,22 +9,34 @@ using static EliteMMO.API.EliteAPI;
 
 namespace ExpBot.Model.EliteAPIWrappers
 {
-    public class PlayerWrapper : APIConstants
+    public class PlayerWrapper : APIConstants, INotifyPropertyChanged
     {
         private static EliteAPI api;
+
+        private bool moving;
+        private bool pulling;
+        private bool casting;
 
         public PlayerWrapper(EliteAPI api)
         {
             PlayerWrapper.api = api;
+
+            Thread playerMonitorThread = new Thread(PlayerMonitor);
+            playerMonitorThread.IsBackground = true;
+            playerMonitorThread.Start();
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         public void SetPlayer(string propertyName, params object[] properties)
         {
             switch (propertyName)
             {
-                case "Target":
-                    break;
                 case "H":
                     api.Entity.SetEntityHPosition(api.Entity.LocalPlayerIndex, (float)properties[0]);
+                    OnPropertyChanged("H");
                     break;
                 case "Job":
                 case "SubJob":
@@ -37,6 +50,9 @@ namespace ExpBot.Model.EliteAPIWrappers
                 case "X":
                 case "Y":
                 case "Z":
+                case "Moving":
+                case "Pulling":
+                case "Casting":
                 default:
                     break;
             }
@@ -62,7 +78,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         //        return "";
         //    }
         //}
-        public bool HasBuff(short id)
+        public bool HasStatusEffect(short id)
         {
             foreach (short buff in GetBuffs())
             {
@@ -163,7 +179,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         public uint GetAggroedTargetId()
         {
             XiEntity entity = null;
-            for (var x = 0; x < 2048; x++)
+            for (int x = 0; x < 2048; x++)
             {
                 entity = api.Entity.GetEntity(x);
                 if (entity.WarpPointer == 0 ||
@@ -260,8 +276,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             int targetId = -1;
             for (int x = 0; x < 2048; x++)
             {
-                var entity = api.Entity.GetEntity(x);
-
+                XiEntity entity = api.Entity.GetEntity(x);
                 if (entity.WarpPointer == 0 ||
                     entity.HealthPercent == 0 ||
                     entity.TargetID <= 0 ||
@@ -300,6 +315,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             {
                 throw new Exception("Not enough MP");
             }
+            Casting = true;
             Thread.Sleep(1000);
             api.ThirdParty.SendString("/ma \"" + spell.Name[0] + "\" " + target);
             int castTime = spell.CastTime;
@@ -311,11 +327,13 @@ namespace ExpBot.Model.EliteAPIWrappers
                 ChatEntry chatEntry = api.Chat.GetNextChatLine();
                 if (chatEntry != null && chatEntry.Text.Equals(Name + "'s casting is interrupted.") || spellTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
                 {
+                    Casting = false;
                     return false;
                 }
             }
             // TODO: Animation Delay - Configurable?
             Thread.Sleep(2600);
+            Casting = false;
             return true;
         }
         public void PerformJobAbility(uint jobAbilityId, string target)
@@ -435,6 +453,21 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             return api.Player.HasAbility((uint)id);
         }
+        public bool Moving
+        {
+            get => moving;
+            set => moving = value;
+        }
+        public bool Pulling
+        {
+            get => pulling;
+            set => pulling = value;
+        }
+        public bool Casting
+        {
+            get => casting;
+            set => casting = value;
+        }
         public uint Id
         {
             get => api.Player.ServerID;
@@ -514,6 +547,128 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             get => api.Player.H;
             set => SetPlayer("H", value);
+        }
+
+        private void PlayerMonitor()
+        {
+            uint id = Id;
+            int job = Job;
+            int subJob = SubJob;
+            string name = Name;
+            uint hp = HP;
+            uint hpp = HPP;
+            uint maxHP = MaxHP;
+            uint mp = MP;
+            uint mpp = MPP;
+            uint maxMP = MaxMP;
+            uint tp = TP;
+            uint playerStatus = PlayerStatus;
+            float x = X;
+            float y = Y;
+            float z = Z;
+            float h = H;
+            bool moving = Moving;
+            bool pulling = Pulling;
+            bool casting = Casting;
+            while (true)
+            {
+                if (id != Id)
+                {
+                    id = Id;
+                    OnPropertyChanged("Id");
+                }
+                if (job != Job)
+                {
+                    job = Job;
+                    OnPropertyChanged("Job");
+                }
+                if (subJob != SubJob)
+                {
+                    subJob = SubJob;
+                    OnPropertyChanged("SubJob");
+                }
+                if (!name.Equals(Name))
+                {
+                    name = Name;
+                    OnPropertyChanged("Name");
+                }
+                if (hp != HP)
+                {
+                    hp = HP;
+                    OnPropertyChanged("HP");
+                }
+                if (hpp != HPP)
+                {
+                    hpp = HPP;
+                    OnPropertyChanged("HPP");
+                }
+                if (maxHP != MaxHP)
+                {
+                    maxHP = MaxHP;
+                    OnPropertyChanged("MaxHP");
+                }
+                if (mp != MP)
+                {
+                    mp = MP;
+                    OnPropertyChanged("MP");
+                }
+                if (mpp != MPP)
+                {
+                    mpp = MPP;
+                    OnPropertyChanged("MPP");
+                }
+                if (maxMP != MaxMP)
+                {
+                    maxMP = MaxMP;
+                    OnPropertyChanged("MaxMP");
+                }
+                if (tp != TP)
+                {
+                    tp = TP;
+                    OnPropertyChanged("TP");
+                }
+                if (playerStatus != PlayerStatus)
+                {
+                    playerStatus = PlayerStatus;
+                    OnPropertyChanged("PlayerStatus");
+                }
+                if (x != X)
+                {
+                    x = X;
+                    OnPropertyChanged("X");
+                }
+                if (y != Y)
+                {
+                    y = Y;
+                    OnPropertyChanged("Y");
+                }
+                if (z != Z)
+                {
+                    z = Z;
+                    OnPropertyChanged("Z");
+                }
+                if (h != H)
+                {
+                    h = H;
+                    OnPropertyChanged("H");
+                }
+                if (moving != Moving)
+                {
+                    moving = Moving;
+                    OnPropertyChanged("Moving");
+                }
+                if (pulling != Pulling)
+                {
+                    pulling = Pulling;
+                    OnPropertyChanged("Pulling");
+                }
+                if (casting != Casting)
+                {
+                    casting = Casting;
+                    OnPropertyChanged("Casting");
+                }
+                Thread.Sleep(100);
+            }
         }
     }
 }

@@ -9,5 +9,8 @@ namespace ExpBot.Views
     public interface IExpBotView
     {
         void UpdatePOLProcessList();
+        void UpdatePlayerDetails();
+        void UpdateTargetDetails();
+        void UpdatePartyDetails();
     }
 }

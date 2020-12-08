@@ -86,6 +86,7 @@
     <Compile Include="Presenter\ExpBotDefaultPresenter.cs" />
     <Compile Include="Presenter\IExpBotPresenter.cs" />
     <Compile Include="Scripts\ExpScript.cs" />
+    <Compile Include="Scripts\IScript.cs" />
     <Compile Include="Views\ExpBotAboutBox.cs">
       <SubType>Form</SubType>
     </Compile>
