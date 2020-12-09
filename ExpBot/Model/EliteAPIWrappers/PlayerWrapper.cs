@@ -1,6 +1,7 @@
 ﻿using EliteMMO.API;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -12,11 +13,9 @@ namespace ExpBot.Model.EliteAPIWrappers
     public class PlayerWrapper : APIConstants, INotifyPropertyChanged
     {
         private static EliteAPI api;
-
         private bool moving;
         private bool pulling;
         private bool casting;
-
         public PlayerWrapper(EliteAPI api)
         {
             PlayerWrapper.api = api;
@@ -57,6 +56,7 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
             }
         }
+
         //public string GetChatLog()
         //{
         //    ChatEntry chatEntry = api.Chat.GetNextChatLine();
@@ -78,21 +78,6 @@ namespace ExpBot.Model.EliteAPIWrappers
         //        return "";
         //    }
         //}
-        public bool HasStatusEffect(short id)
-        {
-            foreach (short buff in GetBuffs())
-            {
-                if (buff == id)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        public short[] GetBuffs()
-        {
-            return api.Player.Buffs;
-        }
         public void Attack(TargetWrapper target)
         {
             FaceTarget(target.X, target.Z);
@@ -135,32 +120,6 @@ namespace ExpBot.Model.EliteAPIWrappers
             api.ThirdParty.KeyPress(Keys.RIGHT);
             Thread.Sleep(TimeSpan.FromSeconds(0.5));
             api.ThirdParty.KeyPress(Keys.NUMPADENTER);
-        }
-        public void Move(float locationX, float locationY, float locationZ)
-        {
-            api.AutoFollow.SetAutoFollowCoords(locationX - X, locationY - Y, locationZ - Z);
-            api.AutoFollow.IsAutoFollowing = true;
-            Thread.Sleep(100);
-        }
-        public void Stop()
-        {
-            api.AutoFollow.IsAutoFollowing = false;
-        }
-        public void MoveForward()
-        {
-            api.ThirdParty.KeyDown(Keys.NUMPAD8);
-        }
-        public void StopMovingForward()
-        {
-            api.ThirdParty.KeyUp(Keys.NUMPAD8);
-        }
-        public void MoveBackward()
-        {
-            api.ThirdParty.KeyDown(Keys.NUMPAD2);
-        }
-        public void StopMovingBackward()
-        {
-            api.ThirdParty.KeyUp(Keys.NUMPAD2);
         }
         public bool SetTarget(int id)
         {
@@ -210,67 +169,28 @@ namespace ExpBot.Model.EliteAPIWrappers
                 return 0;
             }
         }
-        //public XiEntity GetClosestTargetId()
-        //{
-        //    XiEntity closestTargetEntity = null;
-        //    for (var x = 0; x < 2048; x++)
-        //    {
-        //        XiEntity entity = api.Entity.GetEntity(x);
-        //        if (entity.WarpPointer == 0 ||
-        //            entity.HealthPercent == 0 ||
-        //            entity.TargetID <= 0 ||
-        //            (!new BitArray(new int[] { entity.SpawnFlags }).Get(4)) ||
-        //            entity.ClaimID != 0)
-        //        {
-        //            continue;
-        //        }
+        public IList<string> GetAllAvailableTargets()
+        {
+            IList<string> targets = new List<string>();
+            for (int x = 0; x < 2048; x++)
+            {
+                XiEntity entity = api.Entity.GetEntity(x);
+                if ((!new BitArray(new int[] { entity.SpawnFlags }).Get(4)))
+                {
+                    continue;
+                }
 
-        //        if (entity.HealthPercent != 0 && entity.Distance <= 100)
-        //        {
-        //            if (closestTargetEntity == null)
-        //            {
-        //                closestTargetEntity = entity;
-        //            }
-        //            else if (closestTargetEntity.Distance > entity.Distance)
-        //            {
-        //                closestTargetEntity = entity;
-        //            }
-        //        }
-        //    }
-        //    Console.WriteLine("Name: " + closestTargetEntity.Name);
-        //    Console.WriteLine("Distance: " + closestTargetEntity.Distance);
-        //    Console.WriteLine("Status: " + closestTargetEntity.Status);
-        //    Console.WriteLine("TargetID: " + closestTargetEntity.TargetID);
-        //    Console.WriteLine("ServerID: " + closestTargetEntity.ServerID);
-        //    Console.WriteLine("ClaimID: " + closestTargetEntity.ClaimID);
-        //    Console.WriteLine("Type: " + closestTargetEntity.Type);
-        //    return closestTargetEntity;
-        //}
-        //public XiEntity GetClosestTargetId()
-        //{
-        //    XiEntity closestTargetId = null;
-        //    for (var x = 0; x < 2048; x++)
-        //    {
-        //        XiEntity id = api.Entity.GetEntity(x);
-        //        if (id.Name?.Length > 0 &&
-        //            !id.Name.Equals(Name) &&
-        //            id.HealthPercent > 0 &&
-        //            id.Distance > 0 &&
-        //            id.ServerID == Id)
-        //        {
-        //            if (closestTargetId == null)
-        //            {
-        //                closestTargetId = id;
-        //            }
-        //            else if (closestTargetId.Distance > id.Distance)
-        //            {
-        //                closestTargetId = id;
-        //            }
-        //        }
-        //    }
-        //    return closestTargetId;
-        //}
-        public int GetClosestTargetIdByName(string name, float maxDistance)
+                if (entity.Name?.Length > 0)
+                {
+                    if (!targets.Contains(entity.Name))
+                    {
+                        targets.Add(entity.Name);
+                    }
+                }
+            }
+            return targets;
+        }
+        public int GetClosestTargetIdByNames(IList<string> names, float maxDistance)
         {
             float searchID = 999;
             int targetId = -1;
@@ -286,23 +206,42 @@ namespace ExpBot.Model.EliteAPIWrappers
                     continue;
                 }
 
-                if (entity.Name != null &&
-                    entity.Name.ToLower().Equals(name.ToLower()))
+                if (entity.Name != null)
                 {
-                    if (entity.HealthPercent != 0 &&
-                        entity.Distance <= maxDistance)
+                    foreach (string name in names)
                     {
-                        if (searchID > entity.Distance &&
-                            entity.ClaimID == 0 &&
-                            entity.HealthPercent != 0)
+                        if (entity.Name.ToLower().Equals(name.ToLower()))
                         {
-                            searchID = entity.Distance;
-                            targetId = Convert.ToInt32(entity.TargetID);
+                            if (entity.HealthPercent != 0 &&
+                                entity.Distance <= maxDistance)
+                            {
+                                if (searchID > entity.Distance &&
+                                    entity.ClaimID == 0 &&
+                                    entity.HealthPercent != 0)
+                                {
+                                    searchID = entity.Distance;
+                                    targetId = Convert.ToInt32(entity.TargetID);
+                                }
+                            }
                         }
                     }
                 }
             }
             return targetId;
+        }
+        public IList<string> GetAllAvailableTrusts()
+        {
+            IList<string> trustList = new List<string>();
+            foreach (TrustSpellId trust in Enum.GetValues(typeof(TrustSpellId)))
+            {
+                if (HasTrustSpell(trust))
+                {
+                    ISpell spell = api.Resources.GetSpell((uint)trust);
+                    trustList.Add(spell.Name[0]);
+                }
+            }
+            ((List<string>)trustList).Sort();
+            return trustList;
         }
         public int GetSpellRecastRemaining(int spellId)
         {
@@ -349,6 +288,47 @@ namespace ExpBot.Model.EliteAPIWrappers
             api.ThirdParty.SendString("/ws \"" + weaponSkill.Name[0] + "\" " + target);
             // TODO: Animation Delay - Configurable?
             Thread.Sleep(2500);
+        }
+        public void Move(float locationX, float locationY, float locationZ)
+        {
+            api.AutoFollow.SetAutoFollowCoords(locationX - X, locationY - Y, locationZ - Z);
+            api.AutoFollow.IsAutoFollowing = true;
+            Thread.Sleep(100);
+        }
+        public void Stop()
+        {
+            api.AutoFollow.IsAutoFollowing = false;
+        }
+        public void MoveForward()
+        {
+            api.ThirdParty.KeyDown(Keys.NUMPAD8);
+        }
+        public void StopMovingForward()
+        {
+            api.ThirdParty.KeyUp(Keys.NUMPAD8);
+        }
+        public void MoveBackward()
+        {
+            api.ThirdParty.KeyDown(Keys.NUMPAD2);
+        }
+        public void StopMovingBackward()
+        {
+            api.ThirdParty.KeyUp(Keys.NUMPAD2);
+        }
+        public bool HasStatusEffect(short id)
+        {
+            foreach (short buff in GetBuffs())
+            {
+                if (buff == id)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public short[] GetBuffs()
+        {
+            return api.Player.Buffs;
         }
         public bool HasItemInItems(ItemId id)
         {
@@ -551,25 +531,25 @@ namespace ExpBot.Model.EliteAPIWrappers
 
         private void PlayerMonitor()
         {
-            uint id = Id;
-            int job = Job;
-            int subJob = SubJob;
-            string name = Name;
-            uint hp = HP;
-            uint hpp = HPP;
-            uint maxHP = MaxHP;
-            uint mp = MP;
-            uint mpp = MPP;
-            uint maxMP = MaxMP;
-            uint tp = TP;
-            uint playerStatus = PlayerStatus;
-            float x = X;
-            float y = Y;
-            float z = Z;
-            float h = H;
-            bool moving = Moving;
-            bool pulling = Pulling;
-            bool casting = Casting;
+            uint id = 0;
+            int job = 0;
+            int subJob = 0;
+            string name = "";
+            uint hp = 0;
+            uint hpp = 0;
+            uint maxHP = 0;
+            uint mp = 0;
+            uint mpp = 0;
+            uint maxMP = 0;
+            uint tp = 0;
+            uint playerStatus = 0;
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+            float h = 0.0f;
+            bool moving = false;
+            bool pulling = false;
+            bool casting = false;
             while (true)
             {
                 if (id != Id)

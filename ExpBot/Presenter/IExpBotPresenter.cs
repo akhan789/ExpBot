@@ -14,5 +14,8 @@ namespace ExpBot.ViewModel
         bool StartStopBot();
         void Initialise(Process process);
         bool Initialised { get; set; }
+        void AddTarget(string name);
+        void RemoveTarget(string name);
+        void SetTrusts(IList<string> trustsList);
     }
 }

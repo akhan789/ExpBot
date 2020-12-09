@@ -31,6 +31,7 @@ namespace ExpBot.ViewModel
         public void Close()
         {
             model.Unload();
+            view.CloseView();
         }
         public bool StartStopBot()
         {
@@ -39,8 +40,10 @@ namespace ExpBot.ViewModel
             {
                 if (script == null || !script.Running)
                 {
-                    model.Script = script = new ExpScript(model.Player, model.Target, model.Party);
+                    script = model.Script = new ExpScript(model.Player, model.Target, model.Party);
                     script.Running = true;
+                    ((IExpScript)script).TargetNames = model.SelectedTargetList;
+                    ((IExpScript)script).TrustNames = model.SelectedTrustList;
 
                     botThread = new Thread(new ThreadStart(script.Run));
                     botThread.IsBackground = true;
@@ -83,10 +86,12 @@ namespace ExpBot.ViewModel
                 if (model.CurrentPOLProcess?.Id != process.Id)
                 {
                     model.CurrentPOLProcess = process;
+                    Initialised = true;
                     model.Player.PropertyChanged += Player_PropertyChanged;
                     model.Target.PropertyChanged += Target_PropertyChanged;
                     model.Party.PropertyChanged += Party_PropertyChanged;
-                    Initialised = true;
+                    view.UpdateTargetList();
+                    view.UpdateTrustList();
                 }
             }
             catch (Exception e)
@@ -129,6 +134,39 @@ namespace ExpBot.ViewModel
         private void Party_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             view.UpdatePartyDetails();
+        }
+        public void AddTarget(string name)
+        {
+            IList<string> targets;
+            if ((targets = model.SelectedTargetList) == null)
+            {
+                targets = model.SelectedTargetList = new List<string>();
+            }
+            if (!targets.Contains(name))
+            {
+                targets.Add(name);
+                model.SelectedTargetList = targets;
+                view.UpdateSelectedTargets();
+            }
+        }
+        public void RemoveTarget(string name)
+        {
+            IList<string> targets;
+            if ((targets = model.SelectedTargetList) == null)
+            {
+                targets = model.SelectedTargetList = new List<string>();
+            }
+            if (targets.Contains(name))
+            {
+                targets.Remove(name);
+                model.SelectedTargetList = targets;
+                view.UpdateSelectedTargets();
+            }
+        }
+
+        public void SetTrusts(IList<string> trustsList)
+        {
+            model.SelectedTrustList = trustsList;
         }
     }
 }

@@ -29,29 +29,27 @@ namespace ExpBot.Views
             model = new ExpBotDefaultModel();
             presenter = new ExpBotDefaultPresenter(this, model);
         }
-
         protected override void OnLoad(EventArgs e)
         {
             presenter.OnLoad();
         }
-
         private void ExpBotMainWindow_FormClosed(object sender, FormClosedEventArgs e)
         {
-            presenter.Close();
-            Application.Exit();
+            Environment.Exit(0);
         }
-
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             presenter.Close();
-            Application.Exit();
         }
-
+        public void CloseView()
+        {
+            Close();
+            Environment.Exit(0);
+        }
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new ExpBotAboutBox().ShowDialog();
         }
-
         private void cboProcesses_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (!presenter.Initialised)
@@ -59,7 +57,6 @@ namespace ExpBot.Views
                 presenter.Initialise((Process)cboProcesses.SelectedItem);
             }
         }
-
         private void btnStart_Click(object sender, EventArgs e)
         {
             log.Info("ExpBotMainWindow: Starting Exp Bot");
@@ -73,7 +70,6 @@ namespace ExpBot.Views
                 MessageBox.Show("Load Final Fantasy XI before attempting to start the script");
             }
         }
-
         private void btnStop_Click(object sender, EventArgs e)
         {
             if (!presenter.StartStopBot())
@@ -82,7 +78,6 @@ namespace ExpBot.Views
                 btnStop.Enabled = false;
             }
         }
-
         private void chkAlwaysOnTop_CheckedChanged(object sender, EventArgs e)
         {
             if (chkAlwaysOnTop.Checked)
@@ -94,9 +89,53 @@ namespace ExpBot.Views
                 TopMost = false;
             }
         }
-
+        private void btnRefreshTargetList_Click(object sender, EventArgs e)
+        {
+            UpdateTargetList();
+        }
+        private void lstTargets_DoubleClick(object sender, EventArgs e)
+        {
+            if (lstTargets.Items.Count <= 0)
+            {
+                return;
+            }
+            presenter.AddTarget(lstTargets.SelectedItem.ToString());
+        }
+        private void lstSelectedTargets_DoubleClick(object sender, EventArgs e)
+        {
+            if (lstSelectedTargets.Items.Count <= 0)
+            {
+                return;
+            }
+            presenter.RemoveTarget(lstSelectedTargets.SelectedItem.ToString());
+        }
+        public void lstTrustSelections_Click(object sender, EventArgs e)
+        {
+            if (lstTrustSelections.Items.Count <= 0)
+            {
+                return;
+            }
+            if (lstTrustSelections.SelectedItems.Count == 5)
+            {
+                lstTrustSelections.Enabled = false;
+            }
+            presenter.SetTrusts(lstTrustSelections.SelectedItems.Cast<String>().ToList());
+        }
+        private void btnResetTrustList_Click(object sender, EventArgs e)
+        {
+            if (lstTrustSelections.Items.Count <= 0)
+            {
+                return;
+            }
+            lstTrustSelections.SelectedItems.Clear();
+            lstTrustSelections.Enabled = true;
+        }
         public void UpdatePOLProcessList()
         {
+            if (cboProcesses.IsDisposed)
+            {
+                return;
+            }
             cboProcesses.Invoke(new MethodInvoker(delegate
             {
                 cboProcesses.DataSource = null;
@@ -108,9 +147,57 @@ namespace ExpBot.Views
                 cboProcesses.ValueMember = "Id";
             }));
         }
-
+        public void UpdateTargetList()
+        {
+            if (lstTargets.IsDisposed)
+            {
+                return;
+            }
+            lstTargets.Invoke(new MethodInvoker(delegate
+            {
+                lstTargets.DataSource = null;
+                lstTargets.SelectedItem = null;
+                lstTargets.ResetText();
+                lstTargets.Items.Clear();
+                lstTargets.DataSource = model.TargetList;
+            }));
+        }
+        public void UpdateTrustList()
+        {
+            if (lstTrustSelections.IsDisposed)
+            {
+                return;
+            }
+            lstTrustSelections.Invoke(new MethodInvoker(delegate
+            {
+                lstTrustSelections.DataSource = null;
+                lstTrustSelections.SelectedItem = null;
+                lstTrustSelections.ResetText();
+                lstTrustSelections.Items.Clear();
+                lstTrustSelections.DataSource = model.TrustList;
+            }));
+        }
+        public void UpdateSelectedTargets()
+        {
+            if (lstSelectedTargets.IsDisposed)
+            {
+                return;
+            }
+            lstSelectedTargets.Invoke(new MethodInvoker(delegate
+            {
+                lstSelectedTargets.DataSource = null;
+                lstSelectedTargets.SelectedItem = null;
+                lstSelectedTargets.ResetText();
+                lstSelectedTargets.Items.Clear();
+                lstSelectedTargets.DataSource = model.SelectedTargetList;
+            }));
+        }
         public void UpdatePlayerDetails()
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(delegate
@@ -125,6 +212,10 @@ namespace ExpBot.Views
         }
         public void UpdateTargetDetails()
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(delegate
@@ -134,6 +225,10 @@ namespace ExpBot.Views
         }
         public void UpdatePartyDetails()
         {
+            if (IsDisposed)
+            {
+                return;
+            }
             if (InvokeRequired)
             {
                 Invoke(new MethodInvoker(delegate

@@ -95,16 +95,16 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         private void TargetMonitor()
         {
-            uint targetStatus = TargetStatus;
-            uint id = Id;
-            string name = Name;
-            int hpp = HPP;
-            bool lockedOn = LockedOn;
-            double distance = Distance;
-            float x = X;
-            float y = Y;
-            float z = Z;
-            float h = H;
+            uint targetStatus = 0;
+            uint id = 0;
+            string name = "";
+            int hpp = 0;
+            bool lockedOn = false;
+            double distance = 0.0d;
+            float x = 0.0f;
+            float y = 0.0f;
+            float z = 0.0f;
+            float h = 0.0f;
             while (true)
             {
                 if (targetStatus != TargetStatus)

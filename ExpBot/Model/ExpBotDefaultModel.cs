@@ -17,6 +17,8 @@ namespace ExpBot.Model
         private static EliteAPI api;
         private Process currentPOLProcess;
         private IList<Process> currentProcesses;
+        private IList<string> selectedTargetList;
+        private IList<string> trustList;
         private IScript script;
         private PlayerWrapper player;
         private TargetWrapper target;
@@ -36,11 +38,6 @@ namespace ExpBot.Model
                 currentPOLProcess = value;
                 InitializeApi();
             }
-        }
-        public IList<Process> CurrentProcesses
-        {
-            get => currentProcesses;
-            set => currentProcesses = value;
         }
         public void Unload()
         {
@@ -73,6 +70,29 @@ namespace ExpBot.Model
             get => script;
             set => script = value;
         }
+        public IList<Process> CurrentProcesses
+        {
+            get => currentProcesses;
+            set => currentProcesses = value;
+        }
+        public IList<string> TargetList
+        {
+            get => player.GetAllAvailableTargets();
+        }
+        public IList<string> SelectedTargetList
+        {
+            get => selectedTargetList;
+            set => selectedTargetList = value;
+        }
+        public IList<string> TrustList
+        {
+            get => player.GetAllAvailableTrusts();
+        }
+        public IList<string> SelectedTrustList
+        {
+            get => trustList;
+            set => trustList = value;
+        }
         public PlayerWrapper Player
         {
             get => player;
@@ -97,5 +117,6 @@ namespace ExpBot.Model
                 party = value;
             }
         }
+
     }
 }

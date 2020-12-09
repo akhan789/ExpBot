@@ -14,16 +14,19 @@ using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.Scripts
 {
-    public class ExpScript : IScript
+    public class ExpScript : IExpScript
     {
-        public bool running;
-        private bool aggroed = false;
         // Use this Regex any time we need to compare an in-game thing vs an Enum name
         // e.g. Apururu vs Apururu (UC); or Mecisto. Mantle vs MecistoMantle.
         private const string EnumMatchingRegex = "[^a-zA-Z0-9]";
         private readonly PlayerWrapper player;
         private readonly TargetWrapper target;
         private readonly PartyWrapper party;
+
+        private bool running;
+        private bool aggroed = false;
+        private IList<string> targetNames;
+        private IList<string> trustNames;
         public ExpScript(PlayerWrapper player, TargetWrapper target, PartyWrapper party)
         {
             this.player = player;
@@ -37,16 +40,22 @@ namespace ExpBot.Scripts
         public void Run()
         {
             // Parameters - TODO: Make these all configurable via UI.
-            TrustSpellId[] trusts = {
-                //TrustSpellId.Gessho,
-                TrustSpellId.August,
-                TrustSpellId.ApururuUC,
-                //TrustSpellId.Cherukiki,
-                TrustSpellId.ShantottoII,
-                TrustSpellId.Kupofried,
-                //TrustSpellId.Selhteus,
-                TrustSpellId.Qultada
-            };
+            //TrustSpellId[] trusts = {
+            //    //TrustSpellId.Gessho,
+            //    TrustSpellId.August,
+            //    TrustSpellId.ApururuUC,
+            //    //TrustSpellId.Cherukiki,
+            //    TrustSpellId.ShantottoII,
+            //    TrustSpellId.Kupofried,
+            //    //TrustSpellId.Selhteus,
+            //    TrustSpellId.Qultada
+            //};
+            IList<TrustSpellId> trusts = new List<TrustSpellId>();
+            foreach (string name in TrustNames)
+            {
+                Enum.TryParse(Regex.Replace(name, EnumMatchingRegex, ""), out TrustSpellId trustSpell);
+                trusts.Add(trustSpell);
+            }
             const uint RestMPP = 20;
             const uint PullSpell = (uint)BlackMagicSpellId.Stone;
             const int CureIIIHealHP = 80;
@@ -57,7 +66,6 @@ namespace ExpBot.Scripts
             const double MeleeRange = 2.0d;
             const double PullDistance = 18.0d;
             const float PullSearchRadius = 50.0f;
-            const string MonsterName = "Frosty Twitherym";
             Location idleLocation = new Location(player.X, player.Y, player.Z);
 
             // Start the aggro monitor thread.
@@ -93,7 +101,7 @@ namespace ExpBot.Scripts
                                     HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
                                     SummonTrustsIfNecessary(trusts);
                                     int targetId;
-                                    if ((targetId = player.GetClosestTargetIdByName(MonsterName, PullSearchRadius)) > 0)
+                                    if ((targetId = player.GetClosestTargetIdByNames(TargetNames, PullSearchRadius)) > 0)
                                     {
                                         player.SetTarget(targetId);
                                         player.Pulling = true;
@@ -121,23 +129,23 @@ namespace ExpBot.Scripts
                                         if (target.HPP <= 1)
                                         {
                                             int targetId;
-                                            if ((targetId = player.GetClosestTargetIdByName(MonsterName, PullSearchRadius)) > 0)
+                                            if ((targetId = player.GetClosestTargetIdByNames(TargetNames, PullSearchRadius)) > 0)
                                             {
                                                 player.SetTarget(targetId);
                                                 continue;
                                             }
                                         }
-                                        bool outOfRange = false;
+                                        bool pullFailed = false;
                                         while (IsRunningAndNotAggroed() && !player.CastSpell(PullSpell, "<t>"))
                                         {
                                             Thread.Sleep(100);
-                                            if (target.Distance > PullDistance)
+                                            if (target.Distance > PullDistance || target.HPP <= 0)
                                             {
-                                                outOfRange = true;
+                                                pullFailed = true;
                                                 break;
                                             }
                                         }
-                                        if (outOfRange)
+                                        if (pullFailed)
                                         {
                                             continue;
                                         }
@@ -364,9 +372,9 @@ namespace ExpBot.Scripts
                 partyMember++;
             }
         }
-        private void SummonTrustsIfNecessary(TrustSpellId[] trusts)
+        private void SummonTrustsIfNecessary(IList<TrustSpellId> trusts)
         {
-            if (trusts?.Length <= 0)
+            if (trusts?.Count <= 0)
             {
                 return;
             }
@@ -431,6 +439,16 @@ namespace ExpBot.Scripts
         {
             get => running;
             set => running = value;
+        }
+        public IList<string> TargetNames
+        {
+            get => targetNames;
+            set => targetNames = value;
+        }
+        public IList<string> TrustNames
+        {
+            get => trustNames;
+            set => trustNames = value;
         }
         private class Location
         {
