@@ -49,6 +49,7 @@ namespace ExpBot.Model.EliteAPIWrappers
                 case "X":
                 case "Y":
                 case "Z":
+                case "StatusEffects":
                 case "Moving":
                 case "Pulling":
                 case "Casting":
@@ -315,6 +316,22 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             api.ThirdParty.KeyUp(Keys.NUMPAD2);
         }
+        public IList<TPAbilityId> GetWeaponSkills()
+        {
+            IList<TPAbilityId> weaponSkills = new List<TPAbilityId>();
+            foreach (TPAbilityId id in Enum.GetValues(typeof(TPAbilityId)).Cast<TPAbilityId>().ToList())
+            {
+                if (api.Player.HasWeaponSkill((uint)id))
+                {
+                    weaponSkills.Add(id);
+                }
+            }
+            return weaponSkills;
+        }
+        public short[] GetBuffs()
+        {
+            return api.Player.Buffs;
+        }
         public bool HasStatusEffect(short id)
         {
             foreach (short buff in GetBuffs())
@@ -325,10 +342,6 @@ namespace ExpBot.Model.EliteAPIWrappers
                 }
             }
             return false;
-        }
-        public short[] GetBuffs()
-        {
-            return api.Player.Buffs;
         }
         public bool HasItemInItems(ItemId id)
         {
@@ -433,21 +446,6 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             return api.Player.HasAbility((uint)id);
         }
-        public bool Moving
-        {
-            get => moving;
-            set => moving = value;
-        }
-        public bool Pulling
-        {
-            get => pulling;
-            set => pulling = value;
-        }
-        public bool Casting
-        {
-            get => casting;
-            set => casting = value;
-        }
         public uint Id
         {
             get => api.Player.ServerID;
@@ -528,6 +526,26 @@ namespace ExpBot.Model.EliteAPIWrappers
             get => api.Player.H;
             set => SetPlayer("H", value);
         }
+        public short[] StatusEffects
+        {
+            get => api.Player.Buffs;
+            set => SetPlayer("StatusEffects");
+        }
+        public bool Moving
+        {
+            get => moving;
+            set => moving = value;
+        }
+        public bool Pulling
+        {
+            get => pulling;
+            set => pulling = value;
+        }
+        public bool Casting
+        {
+            get => casting;
+            set => casting = value;
+        }
 
         private void PlayerMonitor()
         {
@@ -547,6 +565,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             float y = 0.0f;
             float z = 0.0f;
             float h = 0.0f;
+            short[] statusEffects = new short[] { };
             bool moving = false;
             bool pulling = false;
             bool casting = false;
@@ -567,7 +586,7 @@ namespace ExpBot.Model.EliteAPIWrappers
                     subJob = SubJob;
                     OnPropertyChanged("SubJob");
                 }
-                if (!name.Equals(Name))
+                if (name != null && !name.Equals(Name))
                 {
                     name = Name;
                     OnPropertyChanged("Name");
@@ -646,6 +665,11 @@ namespace ExpBot.Model.EliteAPIWrappers
                 {
                     casting = Casting;
                     OnPropertyChanged("Casting");
+                }
+                if (!Enumerable.SequenceEqual(statusEffects, StatusEffects))
+                {
+                    statusEffects = StatusEffects;
+                    OnPropertyChanged("StatusEffects");
                 }
                 Thread.Sleep(100);
             }

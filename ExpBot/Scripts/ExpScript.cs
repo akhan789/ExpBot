@@ -39,17 +39,6 @@ namespace ExpBot.Scripts
         }
         public void Run()
         {
-            // Parameters - TODO: Make these all configurable via UI.
-            //TrustSpellId[] trusts = {
-            //    //TrustSpellId.Gessho,
-            //    TrustSpellId.August,
-            //    TrustSpellId.ApururuUC,
-            //    //TrustSpellId.Cherukiki,
-            //    TrustSpellId.ShantottoII,
-            //    TrustSpellId.Kupofried,
-            //    //TrustSpellId.Selhteus,
-            //    TrustSpellId.Qultada
-            //};
             IList<TrustSpellId> trusts = new List<TrustSpellId>();
             foreach (string name in TrustNames)
             {

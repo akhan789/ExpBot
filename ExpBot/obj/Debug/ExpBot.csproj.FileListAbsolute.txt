@@ -12,3 +12,4 @@ C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.csproj.CoreComp
 C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.csproj.CopyComplete
 C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\Expbot.exe
 C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\Expbot.pdb
+C:\Program Files (x86)\PlayOnline\ExpBot\ExpBot\obj\Debug\ExpBot.csprojAssemblyReference.cache

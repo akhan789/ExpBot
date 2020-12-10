@@ -163,7 +163,6 @@ namespace ExpBot.ViewModel
                 view.UpdateSelectedTargets();
             }
         }
-
         public void SetTrusts(IList<string> trustsList)
         {
             model.SelectedTrustList = trustsList;

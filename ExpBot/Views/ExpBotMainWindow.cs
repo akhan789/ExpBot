@@ -2,18 +2,13 @@
 using ExpBot.Model;
 using ExpBot.ViewModel;
 using log4net;
-using log4net.Core;
-using log4net.Repository.Hierarchy;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Windows.Forms;
+using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.Views
 {
@@ -160,6 +155,7 @@ namespace ExpBot.Views
                 lstTargets.ResetText();
                 lstTargets.Items.Clear();
                 lstTargets.DataSource = model.TargetList;
+                lstTargets.SelectedItem = null;
             }));
         }
         public void UpdateTrustList()
@@ -175,6 +171,7 @@ namespace ExpBot.Views
                 lstTrustSelections.ResetText();
                 lstTrustSelections.Items.Clear();
                 lstTrustSelections.DataSource = model.TrustList;
+                lstTrustSelections.SelectedItem = null;
             }));
         }
         public void UpdateSelectedTargets()
@@ -192,6 +189,57 @@ namespace ExpBot.Views
                 lstSelectedTargets.DataSource = model.SelectedTargetList;
             }));
         }
+        public void UpdateWeaponSkillList()
+        {
+            if (cboWeaponSkills.IsDisposed)
+            {
+                return;
+            }
+            cboProcesses.Invoke(new MethodInvoker(delegate
+            {
+                IList<TPAbilityId> currentWeaponSkills = new List<TPAbilityId>();
+                foreach (TPAbilityId tpAbilityId in cboWeaponSkills.Items)
+                {
+                    currentWeaponSkills.Add(tpAbilityId);
+                }
+                if (!Enumerable.SequenceEqual(currentWeaponSkills, model.Player.GetWeaponSkills()))
+                {
+                    cboWeaponSkills.DataSource = null;
+                    cboWeaponSkills.SelectedItem = null;
+                    cboWeaponSkills.ResetText();
+                    cboWeaponSkills.Items.Clear();
+                    cboWeaponSkills.DataSource = model.Player.GetWeaponSkills();
+                }
+            }));
+        }
+        public void UpdateStatusEffectsListView()
+        {
+            IList<short> currentStatusEffects = new List<short>();
+            foreach (ListViewItem statusEffect in lstViewStatusEffects.Items)
+            {
+                if (!statusEffect.Equals("-1"))
+                {
+                    currentStatusEffects.Add(Convert.ToInt16(statusEffect.Text));
+                }
+            }
+            IList<short> statusEffects = new List<short>();
+            foreach (short statusEffect in model.Player.StatusEffects)
+            {
+                if (statusEffect != -1)
+                {
+                    statusEffects.Add(statusEffect);
+                }
+            }
+            if (!Enumerable.SequenceEqual(currentStatusEffects, statusEffects))
+            {
+                lstViewStatusEffects.Items.Clear();
+                for (int i = 0; i < statusEffects.Count; i++)
+                {
+                    lstViewStatusEffects.Items.Add(new ListViewItem(statusEffects[i].ToString()));
+                    lstViewStatusEffects.Items[i].SubItems.Add(Enum.GetName(typeof(StatusEffect), statusEffects[i]));
+                }
+            }
+        }
         public void UpdatePlayerDetails()
         {
             if (IsDisposed)
@@ -207,6 +255,8 @@ namespace ExpBot.Views
                     lblMP.Text = model.Player.MP.ToString() + "/" + model.Player.MaxMP.ToString();
                     lblTP.Text = model.Player.TP.ToString();
                     lblStatus.Text = model.Player.PlayerStatus.ToString();
+                    UpdateStatusEffectsListView();
+                    UpdateWeaponSkillList();
                 }));
             }
         }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace ExpBot.Model.EliteAPIWrappers
+﻿namespace ExpBot.Model.EliteAPIWrappers
 {
     public class APIConstants
     {
@@ -97,11 +92,17 @@ namespace ExpBot.Model.EliteAPIWrappers
             MATTDown = 175,
             Helix = 186,
             TPDown = 189,
+            KupofriedDedication = 249,
             Food = 251,
             Signet = 253,
+            FightersRoll = 310,
+            ChaosRoll = 317,
+            CorsairsRoll = 326,
             MEVADown = 404,
             IndiRefresh = 541,
-            Flurry = 581
+            Commitment = 579,
+            Flurry = 581,
+            ColureActive = 612
         }
         #endregion
         #region Player/Monster Status

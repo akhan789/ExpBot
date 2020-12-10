@@ -117,6 +117,5 @@ namespace ExpBot.Model
                 party = value;
             }
         }
-
     }
 }
