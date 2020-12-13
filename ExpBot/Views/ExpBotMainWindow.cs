@@ -61,6 +61,8 @@ namespace ExpBot.Views
             model.SummonTrusts = chkSummonTrusts.Checked;
             model.UseCapPointEquipment = chkUseCapPointEquip.Checked;
             model.UseExpPointEquipment = chkUseExpPointEquip.Checked;
+            model.UseAutoHeal = chkAutoHeal.Checked;
+            model.PullWithSpell = chkPullWithBlackMagicSpell.Checked;
             //model.SelectedTargetList = ;
             //model.SelectedTrustList = ;
             model.PullDistance = Convert.ToDouble(numPullDistance.Value);
@@ -72,6 +74,11 @@ namespace ExpBot.Views
             if ((weaponSkillId = cboWeaponSkills.SelectedItem) != null)
             {
                 model.WeaponSkillId = (TPAbilityId)weaponSkillId;
+            }
+            object blackMagicSpellId;
+            if ((blackMagicSpellId = cboPullSpells.SelectedItem) != null)
+            {
+                model.PullBlackMagicSpellId = (BlackMagicSpellId)blackMagicSpellId;
             }
             if (presenter.StartStopBot())
             {
