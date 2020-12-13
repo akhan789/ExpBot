@@ -16,6 +16,5 @@ namespace ExpBot.ViewModel
         bool Initialised { get; set; }
         void AddTarget(string name);
         void RemoveTarget(string name);
-        void SetTrusts(IList<string> trustsList);
     }
 }

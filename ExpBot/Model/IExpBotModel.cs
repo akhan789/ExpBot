@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.Model
 {
@@ -14,9 +15,22 @@ namespace ExpBot.Model
         Process CurrentPOLProcess { get; set; }
         void Unload();
         IScript Script { get; set; }
-        IList<string> TargetList { get; }
+        bool KeepWithinMeleeRange { get; set; }
+        bool RestMP { get; set; }
+        bool UseWeaponSkill { get; set; }
+        bool SummonTrusts { get; set; }
+        bool UseCapPointEquipment { get; set; }
+        bool UseExpPointEquipment { get; set; }
+        bool UseAutoHeal { get; set; }
+        bool PullWithSpell { get; set; }
+        int RestMPP { get; set; }
+        TPAbilityId WeaponSkillId { get; set; }
+        BlackMagicSpellId PullBlackMagicSpellId { get; set; }
+        int WeaponSkillTP { get; set; }
+        double MeleeRange { get; set; }
+        double PullDistance { get; set; }
+        float PullSearchRadius { get; set; }
         IList<string> SelectedTargetList { get; set; }
-        IList<string> TrustList { get; }
         IList<string> SelectedTrustList { get; set; }
         PlayerWrapper Player { get; set; }
         TargetWrapper Target { get; set; }

@@ -8,14 +8,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.ViewModel
 {
     public class ExpBotDefaultPresenter : IExpBotPresenter
     {
-        private IExpBotView view;
-        private IExpBotModel model;
-        private Thread botThread;
+        private readonly IExpBotView view;
+        private readonly IExpBotModel model;
+        private static Thread botThread;
         public bool initialised;
         public ExpBotDefaultPresenter(IExpBotView view, IExpBotModel model)
         {
@@ -42,11 +43,28 @@ namespace ExpBot.ViewModel
                 {
                     script = model.Script = new ExpScript(model.Player, model.Target, model.Party);
                     script.Running = true;
+                    ((IExpScript)script).KeepWithinMeleeRange = model.KeepWithinMeleeRange;
+                    ((IExpScript)script).RestMP = model.RestMP;
+                    ((IExpScript)script).UseWeaponSkill = model.UseWeaponSkill;
+                    ((IExpScript)script).SummonTrusts = model.SummonTrusts;
+                    ((IExpScript)script).UseCapPointEquipment = model.UseCapPointEquipment;
+                    ((IExpScript)script).UseExpPointEquipment = model.UseExpPointEquipment;
+                    ((IExpScript)script).UseAutoHeal = model.UseAutoHeal;
+                    ((IExpScript)script).PullWithSpell = model.PullWithSpell;
                     ((IExpScript)script).TargetNames = model.SelectedTargetList;
                     ((IExpScript)script).TrustNames = model.SelectedTrustList;
+                    ((IExpScript)script).PullDistance = model.PullDistance;
+                    ((IExpScript)script).PullSearchRadius = model.PullSearchRadius;
+                    ((IExpScript)script).MeleeRange = model.MeleeRange;
+                    ((IExpScript)script).RestMPP = model.RestMPP;
+                    ((IExpScript)script).WeaponSkillTP = model.WeaponSkillTP;
+                    ((IExpScript)script).WeaponSkillId = model.WeaponSkillId;
+                    ((IExpScript)script).PullBlackMagicSpellId = model.PullBlackMagicSpellId;
 
-                    botThread = new Thread(new ThreadStart(script.Run));
-                    botThread.IsBackground = true;
+                    botThread = new Thread(new ThreadStart(script.Run))
+                    {
+                        IsBackground = true
+                    };
                     botThread.Start();
                     return script.Running;
                 }
@@ -115,14 +133,6 @@ namespace ExpBot.ViewModel
                 Thread.Sleep(5000);
             }
         }
-        public bool Initialised
-        {
-            get => initialised;
-            set
-            {
-                initialised = value;
-            }
-        }
         private void Player_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             view.UpdatePlayerDetails();
@@ -163,9 +173,13 @@ namespace ExpBot.ViewModel
                 view.UpdateSelectedTargets();
             }
         }
-        public void SetTrusts(IList<string> trustsList)
+        public bool Initialised
         {
-            model.SelectedTrustList = trustsList;
+            get => initialised;
+            set
+            {
+                initialised = value;
+            }
         }
     }
 }

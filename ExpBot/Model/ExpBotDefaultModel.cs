@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.Model
 {
@@ -17,9 +18,24 @@ namespace ExpBot.Model
         private static EliteAPI api;
         private Process currentPOLProcess;
         private IList<Process> currentProcesses;
+        private IScript script;
+        private bool keepWithinMeleeRange;
+        private bool restMP;
+        private bool useWeaponSkill;
+        private bool summonTrusts;
+        private bool useCapPointEquipment;
+        private bool useExpPointEquipment;
+        private bool useAutoHeal;
+        private bool pullWithSpell;
         private IList<string> selectedTargetList;
         private IList<string> trustList;
-        private IScript script;
+        private int restMPP;
+        private TPAbilityId weaponSkillId;
+        private BlackMagicSpellId pullBlackMagicSpellId;
+        private int weaponSkillTP;
+        private double meleeRange;
+        private double pullDistance;
+        private float pullSearchRadius;
         private PlayerWrapper player;
         private TargetWrapper target;
         private PartyWrapper party;
@@ -65,33 +81,100 @@ namespace ExpBot.Model
                 throw new Exception("POL Process not found when initialise called");
             }
         }
-        public IScript Script
-        {
-            get => script;
-            set => script = value;
-        }
         public IList<Process> CurrentProcesses
         {
             get => currentProcesses;
             set => currentProcesses = value;
         }
-        public IList<string> TargetList
+        public IScript Script
         {
-            get => player.GetAllAvailableTargets();
+            get => script;
+            set => script = value;
         }
         public IList<string> SelectedTargetList
         {
             get => selectedTargetList;
             set => selectedTargetList = value;
         }
-        public IList<string> TrustList
-        {
-            get => player.GetAllAvailableTrusts();
-        }
         public IList<string> SelectedTrustList
         {
             get => trustList;
             set => trustList = value;
+        }
+        public bool KeepWithinMeleeRange
+        {
+            get => keepWithinMeleeRange;
+            set => keepWithinMeleeRange = value;
+        }
+        public bool RestMP
+        {
+            get => restMP;
+            set => restMP = value;
+        }
+        public bool UseWeaponSkill
+        {
+            get => useWeaponSkill;
+            set => useWeaponSkill = value;
+        }
+        public bool SummonTrusts
+        {
+            get => summonTrusts;
+            set => summonTrusts = value;
+        }
+        public bool UseCapPointEquipment
+        {
+            get => useCapPointEquipment;
+            set => useCapPointEquipment = value;
+        }
+        public bool UseExpPointEquipment
+        {
+            get => useExpPointEquipment;
+            set => useExpPointEquipment = value;
+        }
+        public bool UseAutoHeal
+        {
+            get => useAutoHeal;
+            set => useAutoHeal = value;
+        }
+        public bool PullWithSpell
+        {
+            get => pullWithSpell;
+            set => pullWithSpell = value;
+        }
+        public int RestMPP
+        {
+            get => restMPP;
+            set => restMPP = value;
+        }
+        public TPAbilityId WeaponSkillId
+        {
+            get => weaponSkillId;
+            set => weaponSkillId = value;
+        }
+        public BlackMagicSpellId PullBlackMagicSpellId
+        {
+            get => pullBlackMagicSpellId;
+            set => pullBlackMagicSpellId = value;
+        }
+        public int WeaponSkillTP
+        {
+            get => weaponSkillTP;
+            set => weaponSkillTP = value;
+        }
+        public double MeleeRange
+        {
+            get => meleeRange;
+            set => meleeRange = value;
+        }
+        public double PullDistance
+        {
+            get => pullDistance;
+            set => pullDistance = value;
+        }
+        public float PullSearchRadius
+        {
+            get => pullSearchRadius;
+            set => pullSearchRadius = value;
         }
         public PlayerWrapper Player
         {

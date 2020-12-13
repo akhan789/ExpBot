@@ -19,6 +19,54 @@
             // TODO: MogWardrobe4 - probably 12?
         }
         #endregion
+        #region Inventory Slots
+        public enum SlotId
+        {
+            Main = 0,
+            Sub = 1,
+            Range = 2,
+            Ammo = 3,
+            Head = 4,
+            Body = 5,
+            Hands = 6,
+            Legs = 7,
+            Feet = 8,
+            Neck = 9,
+            Waist = 10,
+            Ear1 = 11,
+            Ear2 = 12,
+            Ring1 = 13,
+            Ring2 = 14,
+            Back = 15
+        }
+        #endregion
+        #region Jobs
+        public enum Job
+        {
+            Warrior = 1,
+            Monk = 2,
+            WhiteMage = 3,
+            BlackMage = 4,
+            RedMage = 5,
+            Thief = 6,
+            Paladin = 7,
+            DarkKnight = 8,
+            BeastMaster = 9,
+            Bard = 10,
+            Ranger = 11,
+            Samurai = 12,
+            Ninja = 13,
+            Dragoon = 14,
+            Summoner = 15,
+            BlueMage = 16,
+            Corsair = 17,
+            Puppetmaster = 18,
+            Dancer = 19,
+            Scholar = 20,
+            Geomancer = 21,
+            RuneFencer = 22
+        }
+        #endregion
         #region Status Effects
         public enum StatusEffect
         {
@@ -92,14 +140,17 @@
             MATTDown = 175,
             Helix = 186,
             TPDown = 189,
-            KupofriedDedication = 249,
+            Dedication = 249,
             Food = 251,
             Signet = 253,
             FightersRoll = 310,
             ChaosRoll = 317,
+            HuntersRoll = 320,
+            EvokersRoll = 324,
             CorsairsRoll = 326,
             MEVADown = 404,
             IndiRefresh = 541,
+            AccuracyBoost = 553,
             Commitment = 579,
             Flurry = 581,
             ColureActive = 612
@@ -1698,6 +1749,14 @@
             AspirSamba = 699,
             AspirSambaII = 700,
             HasteSamba = 701,
+            CuringWaltz = 702,
+            CuringWaltzII = 703,
+            CuringWaltzIII = 704,
+            CuringWaltzIV = 705,
+            HealingWaltz = 706,
+            DivineWaltz = 707,
+            DivineWaltzII = 774,
+            CuringWaltzV = 823,
             ClimacticFlourish = 776,
             StrikingFlourish = 825,
             TernaryFlourish = 826,

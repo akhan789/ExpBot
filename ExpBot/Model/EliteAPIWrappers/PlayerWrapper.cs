@@ -37,8 +37,10 @@ namespace ExpBot.Model.EliteAPIWrappers
                     api.Entity.SetEntityHPosition(api.Entity.LocalPlayerIndex, (float)properties[0]);
                     OnPropertyChanged("H");
                     break;
-                case "Job":
+                case "MainJob":
                 case "SubJob":
+                case "MainJobLevel":
+                case "SubJobLevel":
                 case "Name":
                 case "HP":
                 case "HPP":
@@ -276,6 +278,24 @@ namespace ExpBot.Model.EliteAPIWrappers
             Casting = false;
             return true;
         }
+        public IList<IAbility> GetAbilities()
+        {
+            IList<IAbility> abilities = new List<IAbility>();
+            for (uint x = 0; x < 30000; x++)
+            {
+                IAbility ability = api.Resources.GetAbility(x);
+                if (ability?.Name[0]?.Length > 0)
+                {
+                    abilities.Add(ability);
+                }
+            }
+            return abilities;
+        }
+        public void PullWithRanged()
+        {
+            api.ThirdParty.SendString("/ra <t>");
+            Thread.Sleep(4000);
+        }
         public void PerformJobAbility(uint jobAbilityId, string target)
         {
             IAbility ability = api.Resources.GetAbility(jobAbilityId);
@@ -328,6 +348,18 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             return weaponSkills;
         }
+        public IList<BlackMagicSpellId> GetBlackMagicSpells()
+        {
+            IList<BlackMagicSpellId> blackMagicSpells = new List<BlackMagicSpellId>();
+            foreach (BlackMagicSpellId id in Enum.GetValues(typeof(BlackMagicSpellId)).Cast<BlackMagicSpellId>().ToList())
+            {
+                if (HasBlackMagicSpell(id))
+                {
+                    blackMagicSpells.Add(id);
+                }
+            }
+            return blackMagicSpells;
+        }
         public short[] GetBuffs()
         {
             return api.Player.Buffs;
@@ -342,6 +374,28 @@ namespace ExpBot.Model.EliteAPIWrappers
                 }
             }
             return false;
+        }
+        public void UseItem(ItemId id, string target)
+        {
+            IItem item = api.Resources.GetItem((uint)id);
+            api.ThirdParty.SendString("/item \"" + item.Name[0] + "\" " + target);
+            //int castTime = item.CastTime;
+            //Stopwatch itemTimeoutWatch = new Stopwatch();
+            //itemTimeoutWatch.Start();
+            //while (true)
+            //{
+            //    Thread.Sleep(250);
+            //    if (itemTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
+            //    {
+            //        break;
+            //    }
+            //}
+            // TODO: Animation Delay - Configurable?
+            Thread.Sleep(2500);
+        }
+        public bool IsEquippedItem(SlotId slotId, ItemId itemId)
+        {
+            return api.Inventory.GetEquippedItem((int)slotId).Id == (int)itemId;
         }
         public bool HasItemInItems(ItemId id)
         {
@@ -402,6 +456,199 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             return 0;
         }
+        public bool CanCastWhiteMagicSpell(WhiteMagicSpellId id)
+        {
+            if (HasWhiteMagicSpell(id))
+            {
+                switch (Enum.GetName(typeof(WhiteMagicSpellId), id))
+                {
+                    case "CureIII":
+                        switch (MainJob)
+                        {
+                            case (byte)Job.WhiteMage:
+                                if (MainJobLevel >= 21)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.RedMage:
+                                if (MainJobLevel >= 26)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.Paladin:
+                                if (MainJobLevel >= 30)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.Scholar:
+                                if (MainJobLevel >= 30)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        switch (SubJob)
+                        {
+                            case (byte)Job.WhiteMage:
+                                if (SubJobLevel >= 21)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.RedMage:
+                                if (SubJobLevel >= 26)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.Paladin:
+                                if (SubJobLevel >= 30)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.Scholar:
+                                if (SubJobLevel >= 30)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case "CureIV":
+                        switch (MainJob)
+                        {
+                            case (byte)Job.WhiteMage:
+                                if (MainJobLevel >= 41)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.RedMage:
+                                if (MainJobLevel >= 48)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.Paladin:
+                                if (MainJobLevel >= 55)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.Scholar:
+                                if (MainJobLevel >= 55)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        switch (SubJob)
+                        {
+                            case (byte)Job.WhiteMage:
+                                if (SubJobLevel >= 41)
+                                {
+                                    return true;
+                                }
+                                break;
+                            case (byte)Job.RedMage:
+                                if (SubJobLevel >= 48)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case "CureV":
+                        switch (MainJob)
+                        {
+                            case (byte)Job.WhiteMage:
+                                if (MainJobLevel >= 61)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return false;
+        }
+        public bool CanCastGeoSpell(GeomancySpellId id)
+        {
+            if (HasGeomancySpell(id))
+            {
+                switch (Enum.GetName(typeof(GeomancySpellId), id))
+                {
+                    case "IndiPrecision":
+                        switch (MainJob)
+                        {
+                            case (byte)Job.Geomancer:
+                                if (MainJobLevel >= 10)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        switch (SubJob)
+                        {
+                            case (byte)Job.Geomancer:
+                                if (SubJobLevel >= 10)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case "GeoPrecision":
+                        switch (MainJob)
+                        {
+                            case (byte)Job.Geomancer:
+                                if (MainJobLevel >= 14)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        switch (SubJob)
+                        {
+                            case (byte)Job.Geomancer:
+                                if (SubJobLevel >= 14)
+                                {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            return false;
+        }
         public bool HasWhiteMagicSpell(WhiteMagicSpellId id)
         {
             return api.Player.HasSpell((uint)id);
@@ -438,6 +685,10 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             return api.Player.HasAbility((uint)id);
         }
+        public bool HasWeaponSkill(TPAbilityId id)
+        {
+            return api.Player.HasWeaponSkill((uint)id);
+        }
         public bool HasJobAbility(JobAbilityId id)
         {
             return api.Player.HasAbility((uint)id);
@@ -451,15 +702,25 @@ namespace ExpBot.Model.EliteAPIWrappers
             get => api.Player.ServerID;
             set => SetPlayer("Id", value);
         }
-        public int Job
+        public byte MainJob
         {
             get => api.Player.MainJob;
-            set => SetPlayer("Job", value);
+            set => SetPlayer("MainJob", value);
         }
-        public int SubJob
+        public byte SubJob
         {
             get => api.Player.SubJob;
             set => SetPlayer("SubJob", value);
+        }
+        public byte MainJobLevel
+        {
+            get => api.Player.MainJobLevel;
+            set => SetPlayer("MainJobLevel", value);
+        }
+        public byte SubJobLevel
+        {
+            get => api.Player.SubJobLevel;
+            set => SetPlayer("SubJobLevel", value);
         }
         public string Name
         {
@@ -576,10 +837,10 @@ namespace ExpBot.Model.EliteAPIWrappers
                     id = Id;
                     OnPropertyChanged("Id");
                 }
-                if (job != Job)
+                if (job != MainJob)
                 {
-                    job = Job;
-                    OnPropertyChanged("Job");
+                    job = MainJob;
+                    OnPropertyChanged("MainJob");
                 }
                 if (subJob != SubJob)
                 {
