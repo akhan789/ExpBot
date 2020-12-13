@@ -121,7 +121,10 @@ namespace ExpBot.Views
             {
                 return;
             }
-            presenter.AddTarget(lstTargets.SelectedItem.ToString());
+            if (lstTargets.SelectedItem != null)
+            {
+                presenter.AddTarget(lstTargets.SelectedItem.ToString());
+            }
         }
         private void lstSelectedTargets_DoubleClick(object sender, EventArgs e)
         {
