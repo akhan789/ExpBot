@@ -161,7 +161,8 @@
         {
             Idle = 0,
             InCombat = 1,
-            Dead = 3,
+            Dead = 2,
+            Dying = 3,
             Resting = 33
         }
         #endregion

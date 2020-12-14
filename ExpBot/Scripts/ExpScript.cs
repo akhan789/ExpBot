@@ -127,7 +127,7 @@ namespace ExpBot.Scripts
                                         player.LockOn(target);
                                     }
                                     player.Moving = MoveWithinPullDistance(target.Distance, PullDistance);
-                                    if (!player.Moving)
+                                    if (IsRunningAndNotAggroed() && !player.Moving)
                                     {
                                         if (target.HPP <= 1)
                                         {
@@ -138,9 +138,17 @@ namespace ExpBot.Scripts
                                                 continue;
                                             }
                                         }
+                                        if (player.HasStatusEffect((short)APIConstants.StatusEffect.Gravity))
+                                        {
+                                            continue;
+                                        }
                                         bool pullFailed = false;
                                         if (PullWithSpell)
                                         {
+                                            if (player.HasStatusEffect((short)APIConstants.StatusEffect.Silence))
+                                            {
+                                                continue;
+                                            }
                                             while (IsRunningAndNotAggroed() && !player.CastSpell((uint)PullBlackMagicSpellId, "<t>"))
                                             {
                                                 Thread.Sleep(100);
@@ -216,6 +224,7 @@ namespace ExpBot.Scripts
                             }
                             break;
                         case (uint)Status.Dead:
+                        case (uint)Status.Dying:
                             Console.WriteLine("Player status: Dead");
                             player.DeathWarp();
                             Running = false; // Kill the bot, we're done.
@@ -272,7 +281,7 @@ namespace ExpBot.Scripts
         }
         private bool MoveWithinPullDistance(double targetDistance, double distance)
         {
-            if (Running)
+            if (IsRunningAndNotAggroed())
             {
                 if (targetDistance <= distance)
                 {
@@ -419,12 +428,12 @@ namespace ExpBot.Scripts
             if (Running)
             {
                 if (!player.HasStatusEffect((short)APIConstants.StatusEffect.AccuracyBoost) &&
-                    player.CanCastGeoSpell(GeomancySpellId.GeoPrecision))
+                    player.CanCastSpell((uint)GeomancySpellId.GeoPrecision))
                 {
                     player.CastSpell((uint)GeomancySpellId.GeoPrecision, "<me>");
                 }
                 if (!player.HasStatusEffect((short)APIConstants.StatusEffect.ColureActive) &&
-                    player.CanCastGeoSpell(GeomancySpellId.IndiPrecision))
+                    player.CanCastSpell((uint)GeomancySpellId.IndiPrecision))
                 {
                     player.CastSpell((uint)GeomancySpellId.IndiPrecision, "<me>");
                 }
@@ -450,7 +459,7 @@ namespace ExpBot.Scripts
                     {
                         if (member.CurrentHPP <= cureVHP)
                         {
-                            if (player.CanCastWhiteMagicSpell(WhiteMagicSpellId.CureV))
+                            if (player.CanCastSpell((uint)WhiteMagicSpellId.CureV))
                             {
                                 player.CastSpell((uint)WhiteMagicSpellId.CureV, "<p" + partyMember + ">");
                             }
@@ -471,7 +480,7 @@ namespace ExpBot.Scripts
                         }
                         else if (member.CurrentHPP <= cureIVHP)
                         {
-                            if (player.CanCastWhiteMagicSpell(WhiteMagicSpellId.CureIV))
+                            if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIV))
                             {
                                 player.CastSpell((uint)WhiteMagicSpellId.CureIV, "<p" + partyMember + ">");
                             }
@@ -492,7 +501,7 @@ namespace ExpBot.Scripts
                         }
                         else if (member.CurrentHPP <= cureIIIHP)
                         {
-                            if (player.CanCastWhiteMagicSpell(WhiteMagicSpellId.CureIII))
+                            if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIII))
                             {
                                 player.CastSpell((uint)WhiteMagicSpellId.CureIII, "<p" + partyMember + ">");
                             }

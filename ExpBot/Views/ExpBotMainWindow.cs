@@ -134,7 +134,7 @@ namespace ExpBot.Views
             }
             presenter.RemoveTarget(lstSelectedTargets.SelectedItem.ToString());
         }
-        public void lstTrustSelections_Click(object sender, EventArgs e)
+        private void lstTrustSelections_Click(object sender, EventArgs e)
         {
             if (lstTrustSelections.Items.Count <= 0)
             {
