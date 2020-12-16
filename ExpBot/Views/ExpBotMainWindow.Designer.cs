@@ -97,6 +97,9 @@ namespace ExpBot.Views
             this.chkPullWithBlackMagicSpell = new System.Windows.Forms.CheckBox();
             this.pnlConsole = new System.Windows.Forms.Panel();
             this.grpBoxConsole = new System.Windows.Forms.GroupBox();
+            this.eventLog1 = new System.Diagnostics.EventLog();
+            this.lblIdleRadius = new System.Windows.Forms.Label();
+            this.numIdleRadius = new System.Windows.Forms.NumericUpDown();
             this.expBotMainWindowMenuStrip.SuspendLayout();
             this.expBotMainWindowPanel.SuspendLayout();
             this.tblLayoutPanelControls.SuspendLayout();
@@ -122,6 +125,8 @@ namespace ExpBot.Views
             ((System.ComponentModel.ISupportInitialize)(this.numRestMPP)).BeginInit();
             this.pnlConsole.SuspendLayout();
             this.grpBoxConsole.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.eventLog1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numIdleRadius)).BeginInit();
             this.SuspendLayout();
             // 
             // expBotMainWindowMenuStrip
@@ -666,11 +671,11 @@ namespace ExpBot.Views
             // 
             // tblLayoutCombatSettingsGeneral
             // 
-            this.tblLayoutCombatSettingsGeneral.ColumnCount = 3;
-            this.tblLayoutCombatSettingsGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 35F));
-            this.tblLayoutCombatSettingsGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
-            this.tblLayoutCombatSettingsGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkSummonTrusts, 2, 0);
+            this.tblLayoutCombatSettingsGeneral.ColumnCount = 4;
+            this.tblLayoutCombatSettingsGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30.43478F));
+            this.tblLayoutCombatSettingsGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 13.04348F));
+            this.tblLayoutCombatSettingsGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 43.47826F));
+            this.tblLayoutCombatSettingsGeneral.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 13.04348F));
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.lblPullDistance, 0, 0);
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.numPullDistance, 1, 0);
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.lblPullSearchRadius, 0, 1);
@@ -683,11 +688,14 @@ namespace ExpBot.Views
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkUseWSTP, 0, 4);
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.lblWeaponSkill, 0, 5);
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.cboWeaponSkills, 1, 5);
-            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkUseExpPointEquip, 2, 2);
-            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkUseCapPointEquip, 2, 1);
-            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkAutoHeal, 2, 3);
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.cboPullSpells, 1, 6);
             this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkPullWithBlackMagicSpell, 0, 6);
+            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkAutoHeal, 2, 4);
+            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkUseExpPointEquip, 2, 3);
+            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkUseCapPointEquip, 2, 2);
+            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.chkSummonTrusts, 2, 1);
+            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.lblIdleRadius, 2, 0);
+            this.tblLayoutCombatSettingsGeneral.Controls.Add(this.numIdleRadius, 3, 0);
             this.tblLayoutCombatSettingsGeneral.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tblLayoutCombatSettingsGeneral.Location = new System.Drawing.Point(10, 23);
             this.tblLayoutCombatSettingsGeneral.Margin = new System.Windows.Forms.Padding(0);
@@ -700,6 +708,7 @@ namespace ExpBot.Views
             this.tblLayoutCombatSettingsGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 13.80817F));
             this.tblLayoutCombatSettingsGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 13.80817F));
             this.tblLayoutCombatSettingsGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 17.14541F));
+            this.tblLayoutCombatSettingsGeneral.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tblLayoutCombatSettingsGeneral.Size = new System.Drawing.Size(433, 195);
             this.tblLayoutCombatSettingsGeneral.TabIndex = 0;
             // 
@@ -710,7 +719,8 @@ namespace ExpBot.Views
             this.chkSummonTrusts.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.chkSummonTrusts.Checked = true;
             this.chkSummonTrusts.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkSummonTrusts.Location = new System.Drawing.Point(331, 4);
+            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.chkSummonTrusts, 2);
+            this.chkSummonTrusts.Location = new System.Drawing.Point(331, 30);
             this.chkSummonTrusts.Name = "chkSummonTrusts";
             this.chkSummonTrusts.Size = new System.Drawing.Size(99, 17);
             this.chkSummonTrusts.TabIndex = 16;
@@ -722,7 +732,7 @@ namespace ExpBot.Views
             // 
             this.lblPullDistance.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblPullDistance.AutoSize = true;
-            this.lblPullDistance.Location = new System.Drawing.Point(76, 6);
+            this.lblPullDistance.Location = new System.Drawing.Point(56, 6);
             this.lblPullDistance.Name = "lblPullDistance";
             this.lblPullDistance.Size = new System.Drawing.Size(72, 13);
             this.lblPullDistance.TabIndex = 10;
@@ -737,9 +747,9 @@ namespace ExpBot.Views
             0,
             0,
             65536});
-            this.numPullDistance.Location = new System.Drawing.Point(154, 3);
+            this.numPullDistance.Location = new System.Drawing.Point(134, 3);
             this.numPullDistance.Name = "numPullDistance";
-            this.numPullDistance.Size = new System.Drawing.Size(58, 20);
+            this.numPullDistance.Size = new System.Drawing.Size(50, 20);
             this.numPullDistance.TabIndex = 7;
             this.numPullDistance.Value = new decimal(new int[] {
             180,
@@ -752,7 +762,7 @@ namespace ExpBot.Views
             // 
             this.lblPullSearchRadius.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblPullSearchRadius.AutoSize = true;
-            this.lblPullSearchRadius.Location = new System.Drawing.Point(48, 32);
+            this.lblPullSearchRadius.Location = new System.Drawing.Point(28, 32);
             this.lblPullSearchRadius.Name = "lblPullSearchRadius";
             this.lblPullSearchRadius.Size = new System.Drawing.Size(100, 13);
             this.lblPullSearchRadius.TabIndex = 11;
@@ -767,9 +777,9 @@ namespace ExpBot.Views
             0,
             0,
             65536});
-            this.numPullSearchRadius.Location = new System.Drawing.Point(154, 29);
+            this.numPullSearchRadius.Location = new System.Drawing.Point(134, 29);
             this.numPullSearchRadius.Name = "numPullSearchRadius";
-            this.numPullSearchRadius.Size = new System.Drawing.Size(58, 20);
+            this.numPullSearchRadius.Size = new System.Drawing.Size(50, 20);
             this.numPullSearchRadius.TabIndex = 9;
             this.numPullSearchRadius.Value = new decimal(new int[] {
             500,
@@ -785,7 +795,7 @@ namespace ExpBot.Views
             this.chkMeleeRange.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.chkMeleeRange.Checked = true;
             this.chkMeleeRange.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkMeleeRange.Location = new System.Drawing.Point(55, 56);
+            this.chkMeleeRange.Location = new System.Drawing.Point(35, 56);
             this.chkMeleeRange.Name = "chkMeleeRange";
             this.chkMeleeRange.Size = new System.Drawing.Size(93, 17);
             this.chkMeleeRange.TabIndex = 4;
@@ -802,9 +812,9 @@ namespace ExpBot.Views
             0,
             0,
             65536});
-            this.numMeleeRange.Location = new System.Drawing.Point(154, 55);
+            this.numMeleeRange.Location = new System.Drawing.Point(134, 55);
             this.numMeleeRange.Name = "numMeleeRange";
-            this.numMeleeRange.Size = new System.Drawing.Size(58, 20);
+            this.numMeleeRange.Size = new System.Drawing.Size(50, 20);
             this.numMeleeRange.TabIndex = 5;
             this.numMeleeRange.Value = new decimal(new int[] {
             20,
@@ -820,7 +830,7 @@ namespace ExpBot.Views
             this.chkRestMPP.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.chkRestMPP.Checked = true;
             this.chkRestMPP.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkRestMPP.Location = new System.Drawing.Point(61, 82);
+            this.chkRestMPP.Location = new System.Drawing.Point(41, 82);
             this.chkRestMPP.Name = "chkRestMPP";
             this.chkRestMPP.Size = new System.Drawing.Size(87, 17);
             this.chkRestMPP.TabIndex = 0;
@@ -831,14 +841,14 @@ namespace ExpBot.Views
             // numUseWSTP
             // 
             this.numUseWSTP.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numUseWSTP.Location = new System.Drawing.Point(154, 107);
+            this.numUseWSTP.Location = new System.Drawing.Point(134, 107);
             this.numUseWSTP.Maximum = new decimal(new int[] {
             3000,
             0,
             0,
             0});
             this.numUseWSTP.Name = "numUseWSTP";
-            this.numUseWSTP.Size = new System.Drawing.Size(58, 20);
+            this.numUseWSTP.Size = new System.Drawing.Size(50, 20);
             this.numUseWSTP.TabIndex = 3;
             this.numUseWSTP.Value = new decimal(new int[] {
             1000,
@@ -850,9 +860,9 @@ namespace ExpBot.Views
             // numRestMPP
             // 
             this.numRestMPP.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.numRestMPP.Location = new System.Drawing.Point(154, 81);
+            this.numRestMPP.Location = new System.Drawing.Point(134, 81);
             this.numRestMPP.Name = "numRestMPP";
-            this.numRestMPP.Size = new System.Drawing.Size(58, 20);
+            this.numRestMPP.Size = new System.Drawing.Size(50, 20);
             this.numRestMPP.TabIndex = 1;
             this.numRestMPP.Value = new decimal(new int[] {
             20,
@@ -868,9 +878,9 @@ namespace ExpBot.Views
             this.chkUseWSTP.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.chkUseWSTP.Checked = true;
             this.chkUseWSTP.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkUseWSTP.Location = new System.Drawing.Point(5, 108);
+            this.chkUseWSTP.Location = new System.Drawing.Point(3, 108);
             this.chkUseWSTP.Name = "chkUseWSTP";
-            this.chkUseWSTP.Size = new System.Drawing.Size(143, 17);
+            this.chkUseWSTP.Size = new System.Drawing.Size(125, 17);
             this.chkUseWSTP.TabIndex = 2;
             this.chkUseWSTP.Text = "Use Weapon Skill at TP:";
             this.chkUseWSTP.UseVisualStyleBackColor = true;
@@ -880,7 +890,7 @@ namespace ExpBot.Views
             // 
             this.lblWeaponSkill.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.lblWeaponSkill.AutoSize = true;
-            this.lblWeaponSkill.Location = new System.Drawing.Point(75, 136);
+            this.lblWeaponSkill.Location = new System.Drawing.Point(55, 136);
             this.lblWeaponSkill.Name = "lblWeaponSkill";
             this.lblWeaponSkill.Size = new System.Drawing.Size(73, 13);
             this.lblWeaponSkill.TabIndex = 12;
@@ -889,12 +899,12 @@ namespace ExpBot.Views
             // cboWeaponSkills
             // 
             this.cboWeaponSkills.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.cboWeaponSkills, 2);
+            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.cboWeaponSkills, 3);
             this.cboWeaponSkills.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboWeaponSkills.FormattingEnabled = true;
-            this.cboWeaponSkills.Location = new System.Drawing.Point(154, 133);
+            this.cboWeaponSkills.Location = new System.Drawing.Point(134, 133);
             this.cboWeaponSkills.Name = "cboWeaponSkills";
-            this.cboWeaponSkills.Size = new System.Drawing.Size(276, 21);
+            this.cboWeaponSkills.Size = new System.Drawing.Size(296, 21);
             this.cboWeaponSkills.TabIndex = 13;
             this.cboWeaponSkills.SelectedIndexChanged += new System.EventHandler(this.cboWeaponSkills_SelectedIndexChanged);
             // 
@@ -903,7 +913,8 @@ namespace ExpBot.Views
             this.chkUseExpPointEquip.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.chkUseExpPointEquip.AutoSize = true;
             this.chkUseExpPointEquip.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.chkUseExpPointEquip.Location = new System.Drawing.Point(246, 56);
+            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.chkUseExpPointEquip, 2);
+            this.chkUseExpPointEquip.Location = new System.Drawing.Point(246, 82);
             this.chkUseExpPointEquip.Name = "chkUseExpPointEquip";
             this.chkUseExpPointEquip.Size = new System.Drawing.Size(184, 17);
             this.chkUseExpPointEquip.TabIndex = 15;
@@ -916,7 +927,8 @@ namespace ExpBot.Views
             this.chkUseCapPointEquip.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.chkUseCapPointEquip.AutoSize = true;
             this.chkUseCapPointEquip.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.chkUseCapPointEquip.Location = new System.Drawing.Point(258, 30);
+            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.chkUseCapPointEquip, 2);
+            this.chkUseCapPointEquip.Location = new System.Drawing.Point(258, 56);
             this.chkUseCapPointEquip.Name = "chkUseCapPointEquip";
             this.chkUseCapPointEquip.Size = new System.Drawing.Size(172, 17);
             this.chkUseCapPointEquip.TabIndex = 14;
@@ -929,7 +941,8 @@ namespace ExpBot.Views
             this.chkAutoHeal.Anchor = System.Windows.Forms.AnchorStyles.Right;
             this.chkAutoHeal.AutoSize = true;
             this.chkAutoHeal.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.chkAutoHeal.Location = new System.Drawing.Point(354, 82);
+            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.chkAutoHeal, 2);
+            this.chkAutoHeal.Location = new System.Drawing.Point(354, 108);
             this.chkAutoHeal.Name = "chkAutoHeal";
             this.chkAutoHeal.Size = new System.Drawing.Size(76, 17);
             this.chkAutoHeal.TabIndex = 15;
@@ -940,12 +953,12 @@ namespace ExpBot.Views
             // cboPullSpells
             // 
             this.cboPullSpells.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.cboPullSpells, 2);
+            this.tblLayoutCombatSettingsGeneral.SetColumnSpan(this.cboPullSpells, 3);
             this.cboPullSpells.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cboPullSpells.FormattingEnabled = true;
-            this.cboPullSpells.Location = new System.Drawing.Point(154, 165);
+            this.cboPullSpells.Location = new System.Drawing.Point(134, 165);
             this.cboPullSpells.Name = "cboPullSpells";
-            this.cboPullSpells.Size = new System.Drawing.Size(276, 21);
+            this.cboPullSpells.Size = new System.Drawing.Size(296, 21);
             this.cboPullSpells.TabIndex = 13;
             this.cboPullSpells.SelectedIndexChanged += new System.EventHandler(this.cboWeaponSkills_SelectedIndexChanged);
             // 
@@ -956,7 +969,7 @@ namespace ExpBot.Views
             this.chkPullWithBlackMagicSpell.Dock = System.Windows.Forms.DockStyle.Fill;
             this.chkPullWithBlackMagicSpell.Location = new System.Drawing.Point(3, 159);
             this.chkPullWithBlackMagicSpell.Name = "chkPullWithBlackMagicSpell";
-            this.chkPullWithBlackMagicSpell.Size = new System.Drawing.Size(145, 33);
+            this.chkPullWithBlackMagicSpell.Size = new System.Drawing.Size(125, 33);
             this.chkPullWithBlackMagicSpell.TabIndex = 15;
             this.chkPullWithBlackMagicSpell.Text = "Pull with Black Magic Spell:";
             this.chkPullWithBlackMagicSpell.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -983,6 +996,40 @@ namespace ExpBot.Views
             this.grpBoxConsole.TabIndex = 15;
             this.grpBoxConsole.TabStop = false;
             this.grpBoxConsole.Text = "Console";
+            // 
+            // eventLog1
+            // 
+            this.eventLog1.SynchronizingObject = this;
+            // 
+            // lblIdleRadius
+            // 
+            this.lblIdleRadius.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.lblIdleRadius.AutoSize = true;
+            this.lblIdleRadius.Location = new System.Drawing.Point(309, 6);
+            this.lblIdleRadius.Name = "lblIdleRadius";
+            this.lblIdleRadius.Size = new System.Drawing.Size(63, 13);
+            this.lblIdleRadius.TabIndex = 10;
+            this.lblIdleRadius.Text = "Idle Radius:";
+            // 
+            // numIdleRadius
+            // 
+            this.numIdleRadius.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.numIdleRadius.DecimalPlaces = 1;
+            this.numIdleRadius.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.numIdleRadius.Location = new System.Drawing.Point(378, 3);
+            this.numIdleRadius.Name = "numIdleRadius";
+            this.numIdleRadius.Size = new System.Drawing.Size(50, 20);
+            this.numIdleRadius.TabIndex = 7;
+            this.numIdleRadius.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            65536});
+            this.numIdleRadius.ValueChanged += new System.EventHandler(this.numIdleRadius_ValueChanged);
             // 
             // ExpBotMainWindow
             // 
@@ -1030,6 +1077,8 @@ namespace ExpBot.Views
             this.pnlConsole.ResumeLayout(false);
             this.grpBoxConsole.ResumeLayout(false);
             this.grpBoxConsole.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.eventLog1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numIdleRadius)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -1100,5 +1149,8 @@ namespace ExpBot.Views
         private CheckBox chkAutoHeal;
         private ComboBox cboPullSpells;
         private CheckBox chkPullWithBlackMagicSpell;
+        private Label lblIdleRadius;
+        private NumericUpDown numIdleRadius;
+        private System.Diagnostics.EventLog eventLog1;
     }
 }

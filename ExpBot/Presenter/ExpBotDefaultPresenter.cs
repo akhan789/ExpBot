@@ -42,6 +42,7 @@ namespace ExpBot.ViewModel
                 if (script == null || !script.Running)
                 {
                     script = model.Script = new ExpScript(model.Player, model.Target, model.Party);
+                    script.PropertyChanged += Script_PropertyChanged;
                     script.Running = true;
                     ((IExpScript)script).KeepWithinMeleeRange = model.KeepWithinMeleeRange;
                     ((IExpScript)script).RestMP = model.RestMP;
@@ -57,6 +58,7 @@ namespace ExpBot.ViewModel
                     ((IExpScript)script).PullSearchRadius = model.PullSearchRadius;
                     ((IExpScript)script).MeleeRange = model.MeleeRange;
                     ((IExpScript)script).RestMPP = model.RestMPP;
+                    ((IExpScript)script).IdleRadius = model.IdleRadius;
                     ((IExpScript)script).WeaponSkillTP = model.WeaponSkillTP;
                     ((IExpScript)script).WeaponSkillId = model.WeaponSkillId;
                     ((IExpScript)script).PullBlackMagicSpellId = model.PullBlackMagicSpellId;
@@ -144,6 +146,10 @@ namespace ExpBot.ViewModel
         private void Party_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             view.UpdatePartyDetails();
+        }
+        private void Script_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdateScriptDetails();
         }
         public void AddTarget(string name)
         {

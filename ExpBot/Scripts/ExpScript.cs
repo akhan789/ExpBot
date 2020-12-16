@@ -3,6 +3,7 @@ using ExpBot.Model.EliteAPIWrappers;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,7 @@ using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
 namespace ExpBot.Scripts
 {
-    public class ExpScript : IExpScript
+    public class ExpScript : IExpScript, INotifyPropertyChanged
     {
         // Use this Regex any time we need to compare an in-game thing vs an Enum name
         // e.g. Apururu vs Apururu (UC); or Mecisto. Mantle vs MecistoMantle.
@@ -25,7 +26,8 @@ namespace ExpBot.Scripts
 
         private bool running;
         private bool aggroed = false;
-        private bool itemReady = true;
+        private bool trizekRingReady = true;
+        private bool echadRingReady = true;
         private bool keepWithinMeleeRange = true;
         private bool restMP = true;
         private bool useWeaponSkill = true;
@@ -43,6 +45,13 @@ namespace ExpBot.Scripts
         private double meleeRange = 2.0d;
         private double pullDistance = 18.0d;
         private float pullSearchRadius = 50.0f;
+        private float idleRadius = 1.0f;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
         public ExpScript(PlayerWrapper player, TargetWrapper target, PartyWrapper party)
         {
             this.player = player;
@@ -64,9 +73,6 @@ namespace ExpBot.Scripts
                     trusts.Add(trustSpell);
                 }
             }
-            const int CureIIIHealHP = 80;
-            const int CureIVHealHP = 50;
-            const int CureVHealHP = 30;
             Location idleLocation = new Location(player.X, player.Y, player.Z);
 
             // Start the aggro monitor thread.
@@ -81,8 +87,6 @@ namespace ExpBot.Scripts
             {
                 while (Running)
                 {
-                    player.StopMovingBackward();
-                    player.StopMovingForward();
                     switch (player.PlayerStatus)
                     {
                         case (uint)Status.Resting:
@@ -94,15 +98,12 @@ namespace ExpBot.Scripts
                                 if (!player.Pulling)
                                 {
                                     player.SetTarget(0);
-                                    if (DistanceToLocation(idleLocation) > 3.0f)
-                                    {
-                                        RunToLocation(idleLocation, 3.0f);
-                                    }
+                                    RunToLocation(idleLocation, IdleRadius);
                                     SummonTrustsIfNecessary(trusts);
                                     RestMPIfNecessary(RestMPP);
                                     UseCapPointExpPointEquipmentIfNecessary();
                                     CastGEOSpellsIfNecessary();
-                                    HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
+                                    HealHPIfNecessary();
                                     int targetId;
                                     if ((targetId = player.GetClosestTargetIdByNames(TargetNames, PullSearchRadius)) > 0)
                                     {
@@ -121,6 +122,17 @@ namespace ExpBot.Scripts
                                         player.Pulling = false;
                                         continue;
                                     }
+                                    if (player.HasStatusEffect((short)APIConstants.StatusEffect.Gravity))
+                                    {
+                                        continue;
+                                    }
+                                    if (PullWithSpell)
+                                    {
+                                        if (player.HasStatusEffect((short)APIConstants.StatusEffect.Silence))
+                                        {
+                                            continue;
+                                        }
+                                    }
                                     player.FaceTarget(target.X, target.Z);
                                     if (!target.LockedOn)
                                     {
@@ -137,10 +149,6 @@ namespace ExpBot.Scripts
                                                 player.SetTarget(targetId);
                                                 continue;
                                             }
-                                        }
-                                        if (player.HasStatusEffect((short)APIConstants.StatusEffect.Gravity))
-                                        {
-                                            continue;
                                         }
                                         bool pullFailed = false;
                                         if (PullWithSpell)
@@ -167,11 +175,11 @@ namespace ExpBot.Scripts
                                         {
                                             continue;
                                         }
-                                        if (DistanceToLocation(idleLocation) > 3.0f && target.LockedOn)
+                                        if (DistanceToLocation(idleLocation) > IdleRadius && target.LockedOn)
                                         {
                                             player.UnLockOn(target);
                                         }
-                                        RunToLocation(idleLocation, 3.0f);
+                                        RunToLocation(idleLocation, IdleRadius);
                                         player.Attack(target);
                                         player.Pulling = false;
                                     }
@@ -179,10 +187,7 @@ namespace ExpBot.Scripts
                             }
                             else
                             {
-                                if (DistanceToLocation(idleLocation) > 3.0f)
-                                {
-                                    RunToLocation(idleLocation, 3.0f);
-                                }
+                                RunToLocation(idleLocation, IdleRadius);
                                 uint targetId;
                                 if (Running && (targetId = player.GetAggroedTargetId()) > 0)
                                 {
@@ -204,7 +209,7 @@ namespace ExpBot.Scripts
                                     if (!player.Moving)
                                     {
                                         CastGEOSpellsIfNecessary();
-                                        HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
+                                        HealHPIfNecessary();
                                         if (target.Distance > MeleeRange + 0.5d)
                                         {
                                             continue;
@@ -218,7 +223,7 @@ namespace ExpBot.Scripts
                                 else
                                 {
                                     CastGEOSpellsIfNecessary();
-                                    HealHPIfNecessary(CureIIIHealHP, CureIVHealHP, CureVHealHP);
+                                    HealHPIfNecessary();
                                     UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
                                 }
                             }
@@ -233,7 +238,7 @@ namespace ExpBot.Scripts
                             Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
                             break;
                     }
-                    Thread.Sleep(1000);
+                    Thread.Sleep(250);
                 }
             }
             catch (Exception e)
@@ -264,7 +269,7 @@ namespace ExpBot.Scripts
                     player.Move(location.X, location.Y, location.Z);
                     Stopwatch stuckWatch = new Stopwatch();
                     stuckWatch.Start();
-                    while (Running && DistanceToLocation(location) > distanceRadius)
+                    while (Running && !player.IsDead() && DistanceToLocation(location) > distanceRadius)
                     {
                         if (stuckWatch.ElapsedMilliseconds > 1000)
                         {
@@ -288,7 +293,6 @@ namespace ExpBot.Scripts
                     // Within distance.
                     player.StopMovingBackward();
                     player.StopMovingForward();
-                    Thread.Sleep(500); // Cast/JA delay after stopping movement.
                     return false;
                 }
                 else if (targetDistance > distance + 0.5d)
@@ -317,7 +321,7 @@ namespace ExpBot.Scripts
         {
             if (Running)
             {
-                if (targetDistance >= distance + 0.5d && targetDistance <= distance - 0.5d)
+                if ((distance + 0.5d) >= targetDistance && (distance - 0.5d) <= targetDistance)
                 {
                     // Within distance.
                     player.StopMovingBackward();
@@ -388,37 +392,49 @@ namespace ExpBot.Scripts
         {
             if (IsRunningAndNotAggroed() && (UseCapPointEquipment || UseExpPointEquipment))
             {
-                if (UseCapPointEquipment)
+                ItemId currentRing1ItemId = (ItemId)player.GetEquippedItem(SlotId.Ring1).Id;
+                if (UseCapPointEquipment && trizekRingReady)
                 {
-                    if ((player.IsEquippedItem(SlotId.Ring1, ItemId.TrizekRing) ||
-                        player.IsEquippedItem(SlotId.Ring2, ItemId.TrizekRing)))
+                    if (!((player.IsEquippedItem(SlotId.Ring1, ItemId.TrizekRing) ||
+                        player.IsEquippedItem(SlotId.Ring2, ItemId.TrizekRing))))
                     {
-                        if (itemReady && !player.HasStatusEffect((short)APIConstants.StatusEffect.Commitment))
+                        player.EquipItem(SlotId.Ring1, ItemId.TrizekRing);
+                    }
+                    if (trizekRingReady && !player.HasStatusEffect((short)APIConstants.StatusEffect.Commitment))
+                    {
+                        bool itemUsed = player.UseItem(ItemId.TrizekRing, "<me>");
+                        if (itemUsed)
                         {
-                            //Thread itemReadyMonitorThread = new Thread(delegate () { ItemReadyMonitor(7200); })
-                            //{
-                            //    IsBackground = true
-                            //};
-                            //itemReadyMonitorThread.Start();
-                            player.UseItem(ItemId.TrizekRing, "<me>");
+                            Thread trizekRingReadyMonitor = new Thread(delegate () { TrizekRingReadyMonitor(); })
+                            {
+                                IsBackground = true
+                            };
+                            trizekRingReadyMonitor.Start();
                         }
                     }
+                    player.EquipItem(SlotId.Ring1, currentRing1ItemId);
                 }
-                else if (UseExpPointEquipment)
+                else if (UseExpPointEquipment && echadRingReady)
                 {
-                    if ((player.IsEquippedItem(SlotId.Ring1, ItemId.EchadRing) ||
-                        player.IsEquippedItem(SlotId.Ring2, ItemId.EchadRing)))
+                    if (!((player.IsEquippedItem(SlotId.Ring1, ItemId.EchadRing) ||
+                        player.IsEquippedItem(SlotId.Ring2, ItemId.EchadRing))))
                     {
-                        // TODO: Kupofried
-                        if (itemReady && !player.HasStatusEffect((short)APIConstants.StatusEffect.Dedication))
+                        player.EquipItem(SlotId.Ring1, ItemId.EchadRing);
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Dedication) ||
+                        (party.IsPartyMemberPresent("Kupofried") &&
+                        player.CountStatusEffect((short)APIConstants.StatusEffect.Dedication) == 1))
+                    {
+                        bool itemUsed = player.UseItem(ItemId.EchadRing, "<me>");
+                        if (itemUsed)
                         {
-                            //Thread itemReadyMonitorThread = new Thread(delegate () { ItemReadyMonitor(7200); })
-                            //{
-                            //    IsBackground = true
-                            //};
-                            //itemReadyMonitorThread.Start();
-                            player.UseItem(ItemId.EchadRing, "<me>");
+                            Thread echadRingReadyMonitor = new Thread(delegate () { EchadRingReadyMonitor(); })
+                            {
+                                IsBackground = true
+                            };
+                            echadRingReadyMonitor.Start();
                         }
+                        player.EquipItem(SlotId.Ring1, currentRing1ItemId);
                     }
                 }
             }
@@ -427,7 +443,8 @@ namespace ExpBot.Scripts
         {
             if (Running)
             {
-                if (!player.HasStatusEffect((short)APIConstants.StatusEffect.AccuracyBoost) &&
+                if ((!player.HasStatusEffect((short)APIConstants.StatusEffect.AccuracyBoost) ||
+                    player.PetHPP == 0) &&
                     player.CanCastSpell((uint)GeomancySpellId.GeoPrecision))
                 {
                     player.CastSpell((uint)GeomancySpellId.GeoPrecision, "<me>");
@@ -439,7 +456,7 @@ namespace ExpBot.Scripts
                 }
             }
         }
-        private void HealHPIfNecessary(int cureIIIHP, int cureIVHP, int cureVHP)
+        private void HealHPIfNecessary()
         {
             if (!UseAutoHeal)
             {
@@ -457,69 +474,7 @@ namespace ExpBot.Scripts
                     }
                     try
                     {
-                        if (member.CurrentHPP <= cureVHP)
-                        {
-                            if (player.CanCastSpell((uint)WhiteMagicSpellId.CureV))
-                            {
-                                player.CastSpell((uint)WhiteMagicSpellId.CureV, "<p" + partyMember + ">");
-                            }
-                            else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 70 && player.TP >= 500)
-                            {
-                                if (player.HasTPAbility(TPAbilityId.CuringWaltzIV))
-                                {
-                                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIV, "<p" + partyMember + ">");
-                                }
-                            }
-                            else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 45 && player.TP >= 500)
-                            {
-                                if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
-                                {
-                                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + partyMember + ">");
-                                }
-                            }
-                        }
-                        else if (member.CurrentHPP <= cureIVHP)
-                        {
-                            if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIV))
-                            {
-                                player.CastSpell((uint)WhiteMagicSpellId.CureIV, "<p" + partyMember + ">");
-                            }
-                            else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 45 && player.TP >= 350)
-                            {
-                                if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
-                                {
-                                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + partyMember + ">");
-                                }
-                            }
-                            else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 45 && player.TP >= 350)
-                            {
-                                if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
-                                {
-                                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + partyMember + ">");
-                                }
-                            }
-                        }
-                        else if (member.CurrentHPP <= cureIIIHP)
-                        {
-                            if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIII))
-                            {
-                                player.CastSpell((uint)WhiteMagicSpellId.CureIII, "<p" + partyMember + ">");
-                            }
-                            else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 30 && player.TP >= 200)
-                            {
-                                if (player.HasTPAbility(TPAbilityId.CuringWaltzII))
-                                {
-                                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + partyMember + ">");
-                                }
-                            }
-                            else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 30 && player.TP >= 200)
-                            {
-                                if (player.HasTPAbility(TPAbilityId.CuringWaltzII))
-                                {
-                                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + partyMember + ">");
-                                }
-                            }
-                        }
+                        HealMember(member, partyMember);
                     }
                     catch (Exception e)
                     {
@@ -533,6 +488,75 @@ namespace ExpBot.Scripts
                         }
                     }
                     partyMember++;
+                }
+            }
+        }
+        private void HealMember(PartyMember member, int memberIndex)
+        {
+            const int CureIIIHealHP = 80;
+            const int CureIVHealHP = 50;
+            const int CureVHealHP = 30;
+            if (member.CurrentHPP <= CureVHealHP)
+            {
+                if (player.CanCastSpell((uint)WhiteMagicSpellId.CureV))
+                {
+                    player.CastSpell((uint)WhiteMagicSpellId.CureV, "<p" + memberIndex + ">");
+                }
+                else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 70 && player.TP >= 500)
+                {
+                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIV))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIV, "<p" + memberIndex + ">");
+                    }
+                }
+                else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 45 && player.TP >= 500)
+                {
+                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
+                    }
+                }
+            }
+            else if (member.CurrentHPP <= CureIVHealHP)
+            {
+                if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIV))
+                {
+                    player.CastSpell((uint)WhiteMagicSpellId.CureIV, "<p" + memberIndex + ">");
+                }
+                else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 45 && player.TP >= 350)
+                {
+                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
+                    }
+                }
+                else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 45 && player.TP >= 350)
+                {
+                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
+                    }
+                }
+            }
+            else if (member.CurrentHPP <= CureIIIHealHP)
+            {
+                if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIII))
+                {
+                    player.CastSpell((uint)WhiteMagicSpellId.CureIII, "<p" + memberIndex + ">");
+                }
+                else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 30 && player.TP >= 200)
+                {
+                    if (player.HasTPAbility(TPAbilityId.CuringWaltzII))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + memberIndex + ">");
+                    }
+                }
+                else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 30 && player.TP >= 200)
+                {
+                    if (player.HasTPAbility(TPAbilityId.CuringWaltzII))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + memberIndex + ">");
+                    }
                 }
             }
         }
@@ -602,24 +626,44 @@ namespace ExpBot.Scripts
                 Thread.Sleep(100);
             }
         }
-        private void ItemReadyMonitor(int seconds)
+        private void TrizekRingReadyMonitor()
         {
+            trizekRingReady = false;
             Stopwatch readyStopWatch = new Stopwatch();
+            readyStopWatch.Start();
             while (Running)
             {
-                if (readyStopWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(seconds).TotalMilliseconds)
+                if (readyStopWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(player.GetItem(ItemId.TrizekRing).RecastDelay).TotalMilliseconds)
                 {
-                    itemReady = true;
-                    break;
+                    trizekRingReady = true;
+                    return;
                 }
                 Thread.Sleep(100);
             }
-            itemReady = false;
+        }
+        private void EchadRingReadyMonitor()
+        {
+            echadRingReady = false;
+            Stopwatch readyStopWatch = new Stopwatch();
+            readyStopWatch.Start();
+            while (Running)
+            {
+                if (readyStopWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(player.GetItem(ItemId.EchadRing).RecastDelay).TotalMilliseconds)
+                {
+                    echadRingReady = true;
+                    return;
+                }
+                Thread.Sleep(100);
+            }
         }
         public bool Running
         {
             get => running;
-            set => running = value;
+            set
+            {
+                running = value;
+                OnPropertyChanged("Running");
+            }
         }
         public bool KeepWithinMeleeRange
         {
@@ -706,6 +750,12 @@ namespace ExpBot.Scripts
             get => pullSearchRadius;
             set => pullSearchRadius = value;
         }
+        public float IdleRadius
+        {
+            get => idleRadius;
+            set => idleRadius = value;
+        }
+
         private class Location
         {
             private float x;

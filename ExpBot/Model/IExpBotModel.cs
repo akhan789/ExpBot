@@ -30,6 +30,7 @@ namespace ExpBot.Model
         double MeleeRange { get; set; }
         double PullDistance { get; set; }
         float PullSearchRadius { get; set; }
+        float IdleRadius { get; set; }
         IList<string> SelectedTargetList { get; set; }
         IList<string> SelectedTrustList { get; set; }
         PlayerWrapper Player { get; set; }

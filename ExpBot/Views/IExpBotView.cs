@@ -16,5 +16,6 @@ namespace ExpBot.Views
         void UpdatePlayerDetails();
         void UpdateTargetDetails();
         void UpdatePartyDetails();
+        void UpdateScriptDetails();
     }
 }

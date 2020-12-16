@@ -36,6 +36,7 @@ namespace ExpBot.Model
         private double meleeRange;
         private double pullDistance;
         private float pullSearchRadius;
+        private float idleRadius;
         private PlayerWrapper player;
         private TargetWrapper target;
         private PartyWrapper party;
@@ -175,6 +176,11 @@ namespace ExpBot.Model
         {
             get => pullSearchRadius;
             set => pullSearchRadius = value;
+        }
+        public float IdleRadius
+        {
+            get => idleRadius;
+            set => idleRadius = value;
         }
         public PlayerWrapper Player
         {

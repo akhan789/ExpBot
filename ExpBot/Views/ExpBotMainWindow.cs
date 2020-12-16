@@ -69,6 +69,7 @@ namespace ExpBot.Views
             model.PullSearchRadius = Convert.ToSingle(numPullSearchRadius.Value);
             model.MeleeRange = Convert.ToDouble(numMeleeRange.Value);
             model.RestMPP = Convert.ToInt32(numRestMPP.Value);
+            model.IdleRadius = Convert.ToSingle(numIdleRadius.Value);
             model.WeaponSkillTP = Convert.ToInt32(numUseWSTP.Value);
             object weaponSkillId;
             if ((weaponSkillId = cboWeaponSkills.SelectedItem) != null)
@@ -262,6 +263,10 @@ namespace ExpBot.Views
         private void numUseWSTP_ValueChanged(object sender, EventArgs e)
         {
             model.WeaponSkillTP = Convert.ToInt32(numUseWSTP.Value);
+        }
+        private void numIdleRadius_ValueChanged(object sender, EventArgs e)
+        {
+            model.IdleRadius = Convert.ToSingle(numIdleRadius.Value);
         }
         private void cboWeaponSkills_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -464,6 +469,34 @@ namespace ExpBot.Views
                 {
                     //TODO:
                 }));
+            }
+        }
+        public void UpdateScriptDetails()
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(delegate
+                {
+                    if (model.Script != null && !model.Script.Running)
+                    {
+                        btnStart.Enabled = true;
+                        btnStop.Enabled = false;
+                        tabctrlBotControls.Enabled = true;
+                    }
+                }));
+            }
+            else
+            {
+                if (model.Script != null && !model.Script.Running)
+                {
+                    btnStart.Enabled = true;
+                    btnStop.Enabled = false;
+                    tabctrlBotControls.Enabled = true;
+                }
             }
         }
     }

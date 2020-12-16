@@ -196,6 +196,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public int GetClosestTargetIdByNames(IList<string> names, float maxDistance)
         {
+            XiEntity closestTargetEntity = null;
             float searchID = 999;
             int targetId = -1;
             for (int x = 0; x < 2048; x++)
@@ -216,13 +217,20 @@ namespace ExpBot.Model.EliteAPIWrappers
                     {
                         if (entity.Name.ToLower().Equals(name.ToLower()))
                         {
-                            if (entity.HealthPercent != 0 &&
-                                entity.Distance <= maxDistance)
+                            if (entity.HealthPercent != 0 && entity.Distance <= maxDistance)
                             {
                                 if (searchID > entity.Distance &&
                                     entity.ClaimID == 0 &&
                                     entity.HealthPercent != 0)
                                 {
+                                    if (closestTargetEntity == null)
+                                    {
+                                        closestTargetEntity = entity;
+                                    }
+                                    else if (closestTargetEntity.Distance > entity.Distance)
+                                    {
+                                        closestTargetEntity = entity;
+                                    }
                                     searchID = entity.Distance;
                                     targetId = Convert.ToInt32(entity.TargetID);
                                 }
@@ -268,7 +276,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             {
                 Thread.Sleep(250);
                 ChatEntry chatEntry = api.Chat.GetNextChatLine();
-                if (chatEntry != null && chatEntry.Text.Equals(Name + "'s casting is interrupted.") || spellTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
+                if (chatEntry != null && chatEntry.Text.Contains(Name + "'s casting is interrupted.") || spellTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
                 {
                     Casting = false;
                     return false;
@@ -348,38 +356,77 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             return blackMagicSpells;
         }
-        public bool HasStatusEffect(short id)
+        public int CountStatusEffect(short id)
         {
+            int statusEffectOccurs = 0;
             foreach (short buff in api.Player.Buffs)
             {
                 if (buff == id)
                 {
-                    return true;
+                    statusEffectOccurs++;
                 }
+            }
+            return statusEffectOccurs;
+        }
+        public bool HasStatusEffect(short id)
+        {
+            return CountStatusEffect(id) > 0;
+        }
+        public void EquipItem(SlotId slotId, ItemId itemId)
+        {
+            IItem item = GetItem(itemId);
+            if (item?.Name[0].Length > 0)
+            {
+                api.ThirdParty.SendString("/equip " + Enum.GetName(typeof(SlotId), slotId) + " \"" + item.Name[0] + "\"");
+            }
+            Thread.Sleep(2500);
+        }
+        public IItem GetItem(ItemId id)
+        {
+            return api.Resources.GetItem((uint)id);
+        }
+        public IItem GetItem(uint id)
+        {
+            return api.Resources.GetItem(id);
+        }
+        public bool UseItem(ItemId id, string target)
+        {
+            IItem item = api.Resources.GetItem((uint)id);
+            if (MainJobLevel >= item.Level)
+            {
+                Stopwatch castDelay = new Stopwatch();
+                castDelay.Start();
+                while (true)
+                {
+                    Thread.Sleep(250);
+                    if (castDelay.ElapsedMilliseconds >= TimeSpan.FromSeconds(item.CastDelay).TotalMilliseconds)
+                    {
+                        break;
+                    }
+                }
+                api.ThirdParty.SendString("/item \"" + item.Name[0] + "\" " + target);
+                int castTime = item.CastTime;
+                Stopwatch itemTimeoutWatch = new Stopwatch();
+                itemTimeoutWatch.Start();
+                while (true)
+                {
+                    Thread.Sleep(250);
+                    if (itemTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
+                    {
+                        break;
+                    }
+                }
+                return true;
             }
             return false;
         }
-        public void UseItem(ItemId id, string target)
-        {
-            IItem item = api.Resources.GetItem((uint)id);
-            api.ThirdParty.SendString("/item \"" + item.Name[0] + "\" " + target);
-            //int castTime = item.CastTime;
-            //Stopwatch itemTimeoutWatch = new Stopwatch();
-            //itemTimeoutWatch.Start();
-            //while (true)
-            //{
-            //    Thread.Sleep(250);
-            //    if (itemTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
-            //    {
-            //        break;
-            //    }
-            //}
-            // TODO: Animation Delay - Configurable?
-            Thread.Sleep(2500);
-        }
         public bool IsEquippedItem(SlotId slotId, ItemId itemId)
         {
-            return api.Inventory.GetEquippedItem((int)slotId).Id == (int)itemId;
+            return GetEquippedItem(slotId).Id == (int)itemId;
+        }
+        public InventoryItem GetEquippedItem(SlotId slotId)
+        {
+            return api.Inventory.GetEquippedItem((int)slotId);
         }
         public bool HasItemInItems(ItemId id)
         {
@@ -447,6 +494,11 @@ namespace ExpBot.Model.EliteAPIWrappers
                 ISpell spell = api.Resources.GetSpell(id);
                 if (spell != null)
                 {
+                    if (GetSpellRecastRemaining((int)id) > 0)
+                    {
+                        return false;
+                    }
+
                     short levelRequired;
                     if ((levelRequired = spell.LevelRequired[MainJob]) != -1 && MainJobLevel >= levelRequired)
                     {
@@ -515,6 +567,10 @@ namespace ExpBot.Model.EliteAPIWrappers
         public bool HasSpell(uint id)
         {
             return api.Player.HasSpell(id);
+        }
+        public bool IsDead()
+        {
+            return PlayerStatus == (uint)Status.Dead || PlayerStatus == (uint)Status.Dying;
         }
         public uint Id
         {
@@ -631,7 +687,11 @@ namespace ExpBot.Model.EliteAPIWrappers
             get => casting;
             set => casting = value;
         }
-
+        public byte PetHPP
+        {
+            get => api.Player.Pet.HealthPercent;
+            set => SetPlayer("PetHPP");
+        }
         private void PlayerMonitor()
         {
             uint id = 0;
@@ -655,6 +715,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             bool moving = false;
             bool pulling = false;
             bool casting = false;
+            byte petHPP = 0;
             while (true)
             {
                 if (id != Id)
@@ -756,6 +817,11 @@ namespace ExpBot.Model.EliteAPIWrappers
                 {
                     casting = Casting;
                     OnPropertyChanged("Casting");
+                }
+                if (petHPP != PetHPP)
+                {
+                    petHPP = PetHPP;
+                    OnPropertyChanged("PetHPP");
                 }
                 if (!Enumerable.SequenceEqual(statusEffects, StatusEffects))
                 {

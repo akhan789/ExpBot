@@ -88,6 +88,17 @@ namespace ExpBot.Model.EliteAPIWrappers
             get => api.Party.GetPartyMember(5);
             set => SetParty("PartyMember", value);
         }
+        public bool IsPartyMemberPresent(string partyMemberName)
+        {
+            foreach (PartyMember member in PartyMembers)
+            {
+                if (member.Name[0].Equals(partyMemberName))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         private void PartyMonitor()
         {
             while (true)
