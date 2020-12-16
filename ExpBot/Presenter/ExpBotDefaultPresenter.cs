@@ -42,7 +42,7 @@ namespace ExpBot.ViewModel
                 if (script == null || !script.Running)
                 {
                     script = model.Script = new ExpScript(model.Player, model.Target, model.Party);
-                    script.PropertyChanged += Script_PropertyChanged;
+                    //script.PropertyChanged += Script_PropertyChanged;
                     script.Running = true;
                     ((IExpScript)script).KeepWithinMeleeRange = model.KeepWithinMeleeRange;
                     ((IExpScript)script).RestMP = model.RestMP;
@@ -73,10 +73,13 @@ namespace ExpBot.ViewModel
                 else
                 {
                     script.Running = false;
-                    if (botThread != null)
+                    if (botThread != null && !botThread.Join(2000))
                     {
                         botThread.Interrupt();
-                        botThread.Join();
+                        if (!botThread.Join(2000))
+                        {
+                            botThread.Abort();
+                        }
                     }
                     return script.Running;
                 }
@@ -90,10 +93,13 @@ namespace ExpBot.ViewModel
                         script.Running = false;
                         model.Script = null;
                     }
-                    if (botThread != null)
+                    if (botThread != null && !botThread.Join(2000))
                     {
                         botThread.Interrupt();
-                        botThread.Join();
+                        if (!botThread.Join(2000))
+                        {
+                            botThread.Abort();
+                        }
                     }
                 }
                 return false;
@@ -120,7 +126,6 @@ namespace ExpBot.ViewModel
                 Initialised = false;
             }
         }
-
         public void POLProcessMonitor()
         {
             int initialPOLProcessCount = 0;
@@ -134,22 +139,6 @@ namespace ExpBot.ViewModel
                 }
                 Thread.Sleep(5000);
             }
-        }
-        private void Player_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            view.UpdatePlayerDetails();
-        }
-        private void Target_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            view.UpdateTargetDetails();
-        }
-        private void Party_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            view.UpdatePartyDetails();
-        }
-        private void Script_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            view.UpdateScriptDetails();
         }
         public void AddTarget(string name)
         {
@@ -186,6 +175,22 @@ namespace ExpBot.ViewModel
             {
                 initialised = value;
             }
+        }
+        private void Player_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdatePlayerDetails();
+        }
+        private void Target_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdateTargetDetails();
+        }
+        private void Party_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdatePartyDetails();
+        }
+        private void Script_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            view.UpdateScriptDetails();
         }
     }
 }

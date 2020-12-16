@@ -196,6 +196,11 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public int GetClosestTargetIdByNames(IList<string> names, float maxDistance)
         {
+            if (names == null || names.Count == 0)
+            {
+                return -1;
+            }
+
             XiEntity closestTargetEntity = null;
             float searchID = 999;
             int targetId = -1;
@@ -292,12 +297,38 @@ namespace ExpBot.Model.EliteAPIWrappers
             api.ThirdParty.SendString("/ra <t>");
             Thread.Sleep(4000);
         }
+        public int GetTPAbilityRecast(TPAbilityId tpAbilityId)
+        {
+            IAbility ability = api.Resources.GetAbility((uint)tpAbilityId);
+            if (ability != null)
+            {
+                return GetAbilityRecast(ability.TimerID);
+            }
+            return 0;
+        }
+        public int GetAbilityRecast(ushort timerId)
+        {
+            IList<int> timerIds = api.Recast.GetAbilityIds();
+            for (int x = 0; x < timerIds.Count; x++)
+            {
+                if (timerIds[x] == timerId)
+                {
+                    return api.Recast.GetAbilityRecast(x);
+                }
+            }
+            return 0;
+        }
         public void PerformJobAbility(uint jobAbilityId, string target)
         {
             IAbility ability = api.Resources.GetAbility(jobAbilityId);
-            api.ThirdParty.SendString("/ja \"" + ability.Name[0] + "\" " + target);
-            // TODO: Animation Delay - Configurable?
-            Thread.Sleep(2500);
+            if (ability != null &&
+                HasAbility(jobAbilityId) &&
+                GetAbilityRecast(ability.TimerID) == 0)
+            {
+                api.ThirdParty.SendString("/ja \"" + ability.Name[0] + "\" " + target);
+                // TODO: Animation Delay - Configurable?
+                Thread.Sleep(2500);
+            }
         }
         public void PerformWeaponSkill(TPAbilityId weaponSkillId, string target)
         {
@@ -550,7 +581,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public bool HasTPAbility(TPAbilityId id)
         {
-            return api.Player.HasAbility((uint)id);
+            return HasAbility((uint)id);
         }
         public bool HasWeaponSkill(TPAbilityId id)
         {
@@ -558,11 +589,15 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public bool HasJobAbility(JobAbilityId id)
         {
-            return api.Player.HasAbility((uint)id);
+            return HasAbility((uint)id);
         }
         public bool HasPetAbility(PetAbilityId id)
         {
-            return api.Player.HasAbility((uint)id);
+            return HasAbility((uint)id);
+        }
+        public bool HasAbility(uint id)
+        {
+            return api.Player.HasAbility(id);
         }
         public bool HasSpell(uint id)
         {

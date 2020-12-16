@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
@@ -94,12 +95,13 @@ namespace ExpBot.Views
         }
         private void btnStop_Click(object sender, EventArgs e)
         {
-            if (!presenter.StartStopBot())
+            new Thread(new ThreadStart(delegate
             {
-                btnStart.Enabled = true;
-                btnStop.Enabled = false;
-                tabctrlBotControls.Enabled = true;
-            }
+                presenter.StartStopBot();
+            })).Start();
+            btnStart.Enabled = true;
+            btnStop.Enabled = false;
+            tabctrlBotControls.Enabled = true;
         }
         private void chkAlwaysOnTop_CheckedChanged(object sender, EventArgs e)
         {

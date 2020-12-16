@@ -24,10 +24,14 @@ namespace ExpBot.Scripts
         private readonly TargetWrapper target;
         private readonly PartyWrapper party;
 
-        private bool running;
-        private bool aggroed = false;
-        private bool trizekRingReady = true;
-        private bool echadRingReady = true;
+        private static Thread aggroMonitorThread;
+        private static Thread trizekRingReadyMonitor;
+        private static Thread echadRingReadyMonitor;
+
+        private volatile bool running;
+        private volatile bool aggroed = false;
+        private volatile bool trizekRingReady = true;
+        private volatile bool echadRingReady = true;
         private bool keepWithinMeleeRange = true;
         private bool restMP = true;
         private bool useWeaponSkill = true;
@@ -58,10 +62,6 @@ namespace ExpBot.Scripts
             this.target = target;
             this.party = party;
         }
-        ~ExpScript()
-        {
-            Running = false;
-        }
         public void Run()
         {
             IList<TrustSpellId> trusts = new List<TrustSpellId>();
@@ -76,7 +76,7 @@ namespace ExpBot.Scripts
             Location idleLocation = new Location(player.X, player.Y, player.Z);
 
             // Start the aggro monitor thread.
-            Thread aggroMonitorThread = new Thread(new ThreadStart(AggroMonitor))
+            aggroMonitorThread = new Thread(new ThreadStart(AggroMonitor))
             {
                 IsBackground = true
             };
@@ -248,7 +248,30 @@ namespace ExpBot.Scripts
             finally
             {
                 Running = false;
-                aggroMonitorThread.Join();
+                if (aggroMonitorThread != null && !aggroMonitorThread.Join(2000))
+                {
+                    aggroMonitorThread.Interrupt();
+                    if (!aggroMonitorThread.Join(2000))
+                    {
+                        aggroMonitorThread.Abort();
+                    }
+                }
+                if (trizekRingReadyMonitor != null && !trizekRingReadyMonitor.Join(2000))
+                {
+                    trizekRingReadyMonitor.Interrupt();
+                    if (!trizekRingReadyMonitor.Join(2000))
+                    {
+                        trizekRingReadyMonitor.Abort();
+                    }
+                }
+                if (echadRingReadyMonitor != null && !echadRingReadyMonitor.Join(2000))
+                {
+                    echadRingReadyMonitor.Interrupt();
+                    if (!echadRingReadyMonitor.Join(2000))
+                    {
+                        echadRingReadyMonitor.Abort();
+                    }
+                }
             }
             Console.WriteLine("Exp Bot has stopped running");
         }
@@ -368,23 +391,27 @@ namespace ExpBot.Scripts
         }
         private void RestMPIfNecessary(int restMPP)
         {
-            if (IsRunningAndNotAggroed() && RestMP)
+            if (restMPP <= 0)
             {
-                if (restMPP <= 0)
+                return;
+            }
+            if (player.MPP <= restMPP)
+            {
+                if (target.Id != 0)
                 {
-                    return;
+                    player.SetTarget(0);
                 }
-                if (player.MPP <= restMPP)
+                player.Heal();
+                Stopwatch restMPPTimeout = new Stopwatch();
+                restMPPTimeout.Start();
+                while (IsRunningAndNotAggroed() && !player.IsDead() && player.MPP < 100)
                 {
-                    if (target.Id != 0)
+                    // 5 min timeout. Something gone wrong if it's still resting after 5mins.
+                    if (restMPPTimeout.ElapsedMilliseconds >= TimeSpan.FromSeconds(300).TotalMilliseconds)
                     {
-                        player.SetTarget(0);
+                        break;
                     }
-                    player.Heal();
-                    while (IsRunningAndNotAggroed() && player.MPP < 100)
-                    {
-                        Thread.Sleep(100);
-                    }
+                    Thread.Sleep(100);
                 }
             }
         }
@@ -405,7 +432,16 @@ namespace ExpBot.Scripts
                         bool itemUsed = player.UseItem(ItemId.TrizekRing, "<me>");
                         if (itemUsed)
                         {
-                            Thread trizekRingReadyMonitor = new Thread(delegate () { TrizekRingReadyMonitor(); })
+                            if (trizekRingReadyMonitor != null)
+                            {
+                                trizekRingReadyMonitor.Interrupt();
+                                if (!trizekRingReadyMonitor.Join(2000))
+                                {
+                                    trizekRingReadyMonitor.Abort();
+                                }
+                                trizekRingReadyMonitor = null;
+                            }
+                            trizekRingReadyMonitor = new Thread(delegate () { TrizekRingReadyMonitor(); })
                             {
                                 IsBackground = true
                             };
@@ -428,7 +464,16 @@ namespace ExpBot.Scripts
                         bool itemUsed = player.UseItem(ItemId.EchadRing, "<me>");
                         if (itemUsed)
                         {
-                            Thread echadRingReadyMonitor = new Thread(delegate () { EchadRingReadyMonitor(); })
+                            if (echadRingReadyMonitor != null)
+                            {
+                                echadRingReadyMonitor.Interrupt();
+                                if (!echadRingReadyMonitor.Join(2000))
+                                {
+                                    echadRingReadyMonitor.Abort();
+                                }
+                                echadRingReadyMonitor = null;
+                            }
+                            echadRingReadyMonitor = new Thread(delegate () { EchadRingReadyMonitor(); })
                             {
                                 IsBackground = true
                             };
@@ -493,70 +538,64 @@ namespace ExpBot.Scripts
         }
         private void HealMember(PartyMember member, int memberIndex)
         {
-            const int CureIIIHealHP = 80;
-            const int CureIVHealHP = 50;
-            const int CureVHealHP = 30;
-            if (member.CurrentHPP <= CureVHealHP)
+            const int CureIIIHealHPP = 80;
+            const int CureIVHealHPP = 50;
+            const int CureVHealHPP = 30;
+            if (member.CurrentHPP <= CureVHealHPP)
             {
                 if (player.CanCastSpell((uint)WhiteMagicSpellId.CureV))
                 {
                     player.CastSpell((uint)WhiteMagicSpellId.CureV, "<p" + memberIndex + ">");
                 }
-                else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 70 && player.TP >= 500)
+                else if (player.MainJob == (byte)Job.Dancer &&
+                    player.MainJobLevel >= 70 &&
+                    player.TP >= 650)
                 {
-                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIV))
-                    {
-                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIV, "<p" + memberIndex + ">");
-                    }
+                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIV, "<p" + memberIndex + ">");
                 }
-                else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 45 && player.TP >= 500)
+                else if (player.SubJob == (byte)Job.Dancer &&
+                    player.SubJobLevel >= 45 &&
+                    player.TP >= 500)
                 {
-                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
-                    {
-                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
-                    }
+                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
                 }
             }
-            else if (member.CurrentHPP <= CureIVHealHP)
+            else if (member.CurrentHPP <= CureIVHealHPP)
             {
                 if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIV))
                 {
                     player.CastSpell((uint)WhiteMagicSpellId.CureIV, "<p" + memberIndex + ">");
                 }
-                else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 45 && player.TP >= 350)
+                else if (player.MainJob == (byte)Job.Dancer &&
+                    player.MainJobLevel >= 45 &&
+                    player.TP >= 500)
                 {
-                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
-                    {
-                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
-                    }
+                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
                 }
-                else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 45 && player.TP >= 350)
+                else if (player.SubJob == (byte)Job.Dancer &&
+                    player.SubJobLevel >= 45 &&
+                    player.TP >= 500)
                 {
-                    if (player.HasTPAbility(TPAbilityId.CuringWaltzIII))
-                    {
-                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
-                    }
+                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzIII, "<p" + memberIndex + ">");
                 }
             }
-            else if (member.CurrentHPP <= CureIIIHealHP)
+            else if (member.CurrentHPP <= CureIIIHealHPP)
             {
                 if (player.CanCastSpell((uint)WhiteMagicSpellId.CureIII))
                 {
                     player.CastSpell((uint)WhiteMagicSpellId.CureIII, "<p" + memberIndex + ">");
                 }
-                else if (player.MainJob == (byte)Job.Dancer && player.MainJobLevel >= 30 && player.TP >= 200)
+                else if (player.MainJob == (byte)Job.Dancer &&
+                    player.MainJobLevel >= 30 &&
+                    player.TP >= 350)
                 {
-                    if (player.HasTPAbility(TPAbilityId.CuringWaltzII))
-                    {
-                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + memberIndex + ">");
-                    }
+                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + memberIndex + ">");
                 }
-                else if (player.SubJob == (byte)Job.Dancer && player.SubJobLevel >= 30 && player.TP >= 200)
+                else if (player.SubJob == (byte)Job.Dancer &&
+                    player.SubJobLevel >= 30 &&
+                    player.TP >= 350)
                 {
-                    if (player.HasTPAbility(TPAbilityId.CuringWaltzII))
-                    {
-                        player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + memberIndex + ">");
-                    }
+                    player.PerformJobAbility((uint)TPAbilityId.CuringWaltzII, "<p" + memberIndex + ">");
                 }
             }
         }
