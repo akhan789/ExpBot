@@ -295,7 +295,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         public void PullWithRanged()
         {
             api.ThirdParty.SendString("/ra <t>");
-            Thread.Sleep(4000);
+            Thread.Sleep(4500);
         }
         public int GetTPAbilityRecast(TPAbilityId tpAbilityId)
         {

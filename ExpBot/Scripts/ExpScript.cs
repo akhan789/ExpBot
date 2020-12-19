@@ -102,7 +102,7 @@ namespace ExpBot.Scripts
                                     SummonTrustsIfNecessary(trusts);
                                     RestMPIfNecessary(RestMPP);
                                     UseCapPointExpPointEquipmentIfNecessary();
-                                    CastGEOSpellsIfNecessary();
+                                    BuffIfNecessary();
                                     HealHPIfNecessary();
                                     int targetId;
                                     if ((targetId = player.GetClosestTargetIdByNames(TargetNames, PullSearchRadius)) > 0)
@@ -138,7 +138,7 @@ namespace ExpBot.Scripts
                                     {
                                         player.LockOn(target);
                                     }
-                                    player.Moving = MoveWithinPullDistance(target.Distance, PullDistance);
+                                    player.Moving = MoveWithinPullDistance(target.Distance, PullDistance, true);
                                     if (IsRunningAndNotAggroed() && !player.Moving)
                                     {
                                         if (target.HPP <= 1)
@@ -205,10 +205,10 @@ namespace ExpBot.Scripts
                                 player.FaceTarget(target.X, target.Z);
                                 if (KeepWithinMeleeRange)
                                 {
-                                    player.Moving = MoveWithinDistance(target.Distance, MeleeRange);
+                                    player.Moving = MoveWithinDistance(target.Distance, MeleeRange, true);
                                     if (!player.Moving)
                                     {
-                                        CastGEOSpellsIfNecessary();
+                                        BuffIfNecessary();
                                         HealHPIfNecessary();
                                         if (target.Distance > MeleeRange + 0.5d)
                                         {
@@ -222,7 +222,7 @@ namespace ExpBot.Scripts
                                 }
                                 else
                                 {
-                                    CastGEOSpellsIfNecessary();
+                                    BuffIfNecessary();
                                     HealHPIfNecessary();
                                     UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
                                 }
@@ -307,10 +307,15 @@ namespace ExpBot.Scripts
                 }
             }
         }
-        private bool MoveWithinPullDistance(double targetDistance, double distance)
+        private bool MoveWithinPullDistance(double targetDistance, double distance, bool checkLockOn)
         {
             if (IsRunningAndNotAggroed())
             {
+                if (checkLockOn && target.LockedOn == false)
+                {
+                    return false;
+                }
+
                 if (targetDistance <= distance)
                 {
                     // Within distance.
@@ -340,10 +345,15 @@ namespace ExpBot.Scripts
                 return false;
             }
         }
-        private bool MoveWithinDistance(double targetDistance, double distance)
+        private bool MoveWithinDistance(double targetDistance, double distance, bool checkLockOn)
         {
             if (Running)
             {
+                if(checkLockOn && target.LockedOn == false)
+                {
+                    return false;
+                }
+
                 if ((distance + 0.5d) >= targetDistance && (distance - 0.5d) <= targetDistance)
                 {
                     // Within distance.
@@ -422,13 +432,13 @@ namespace ExpBot.Scripts
                 ItemId currentRing1ItemId = (ItemId)player.GetEquippedItem(SlotId.Ring1).Id;
                 if (UseCapPointEquipment && trizekRingReady)
                 {
-                    if (!((player.IsEquippedItem(SlotId.Ring1, ItemId.TrizekRing) ||
-                        player.IsEquippedItem(SlotId.Ring2, ItemId.TrizekRing))))
-                    {
-                        player.EquipItem(SlotId.Ring1, ItemId.TrizekRing);
-                    }
                     if (trizekRingReady && !player.HasStatusEffect((short)APIConstants.StatusEffect.Commitment))
                     {
+                        if (!((player.IsEquippedItem(SlotId.Ring1, ItemId.TrizekRing) ||
+                            player.IsEquippedItem(SlotId.Ring2, ItemId.TrizekRing))))
+                        {
+                            player.EquipItem(SlotId.Ring1, ItemId.TrizekRing);
+                        }
                         bool itemUsed = player.UseItem(ItemId.TrizekRing, "<me>");
                         if (itemUsed)
                         {
@@ -452,15 +462,15 @@ namespace ExpBot.Scripts
                 }
                 else if (UseExpPointEquipment && echadRingReady)
                 {
-                    if (!((player.IsEquippedItem(SlotId.Ring1, ItemId.EchadRing) ||
-                        player.IsEquippedItem(SlotId.Ring2, ItemId.EchadRing))))
-                    {
-                        player.EquipItem(SlotId.Ring1, ItemId.EchadRing);
-                    }
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Dedication) ||
                         (party.IsPartyMemberPresent("Kupofried") &&
                         player.CountStatusEffect((short)APIConstants.StatusEffect.Dedication) == 1))
                     {
+                        if (!((player.IsEquippedItem(SlotId.Ring1, ItemId.EchadRing) ||
+                            player.IsEquippedItem(SlotId.Ring2, ItemId.EchadRing))))
+                        {
+                            player.EquipItem(SlotId.Ring1, ItemId.EchadRing);
+                        }
                         bool itemUsed = player.UseItem(ItemId.EchadRing, "<me>");
                         if (itemUsed)
                         {
@@ -484,20 +494,35 @@ namespace ExpBot.Scripts
                 }
             }
         }
-        private void CastGEOSpellsIfNecessary()
+        private void BuffIfNecessary()
         {
             if (Running)
             {
-                if ((!player.HasStatusEffect((short)APIConstants.StatusEffect.AccuracyBoost) ||
-                    player.PetHPP == 0) &&
-                    player.CanCastSpell((uint)GeomancySpellId.GeoPrecision))
+                if (player.MainJob == (byte)Job.Geomancer ||
+                    player.SubJob == (byte)Job.Geomancer)
                 {
-                    player.CastSpell((uint)GeomancySpellId.GeoPrecision, "<me>");
+                    if ((!player.HasStatusEffect((short)APIConstants.StatusEffect.AccuracyBoost) ||
+                        player.PetHPP == 0) &&
+                        player.CanCastSpell((uint)GeomancySpellId.GeoPrecision))
+                    {
+                        player.CastSpell((uint)GeomancySpellId.GeoPrecision, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.ColureActive) &&
+                        player.CanCastSpell((uint)GeomancySpellId.IndiPrecision))
+                    {
+                        player.CastSpell((uint)GeomancySpellId.IndiPrecision, "<me>");
+                    }
                 }
-                if (!player.HasStatusEffect((short)APIConstants.StatusEffect.ColureActive) &&
-                    player.CanCastSpell((uint)GeomancySpellId.IndiPrecision))
+                if (((player.MainJob == (byte)Job.Dancer &&
+                    player.MainJobLevel >= 45) ||
+                    (player.SubJob == (byte)Job.Dancer &&
+                    player.SubJobLevel >= 45)) &&
+                    player.TP >= 350)
                 {
-                    player.CastSpell((uint)GeomancySpellId.IndiPrecision, "<me>");
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.HasteSamba))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.HasteSamba, "<me>");
+                    }
                 }
             }
         }

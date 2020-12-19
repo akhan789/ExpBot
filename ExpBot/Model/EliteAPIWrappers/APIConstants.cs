@@ -148,6 +148,7 @@
             HuntersRoll = 320,
             EvokersRoll = 324,
             CorsairsRoll = 326,
+            HasteSamba = 370,
             MEVADown = 404,
             IndiRefresh = 541,
             AccuracyBoost = 553,
