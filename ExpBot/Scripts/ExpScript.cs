@@ -87,13 +87,15 @@ namespace ExpBot.Scripts
             {
                 while (Running)
                 {
+                    //player.CastSpell((uint)WhiteMagicSpellId.Dia, "<t>");
+                    //player.CastSpell((uint)BlueMagicSpellId.Bludgeon, "<t>");
                     switch (player.PlayerStatus)
                     {
                         case (uint)Status.Resting:
                             player.Heal(); // Stand back up.
                             break;
                         case (uint)Status.Idle:
-                            if (IsRunningAndNotAggroed())
+                            if (IsRunningAndNotDeadOrAggroed())
                             {
                                 if (!player.Pulling)
                                 {
@@ -104,6 +106,7 @@ namespace ExpBot.Scripts
                                     UseCapPointExpPointEquipmentIfNecessary();
                                     BuffIfNecessary();
                                     HealHPIfNecessary();
+                                    RemoveStatusEffectsIfNecessary();
                                     int targetId;
                                     if ((targetId = player.GetClosestTargetIdByNames(TargetNames, PullSearchRadius)) > 0)
                                     {
@@ -117,7 +120,7 @@ namespace ExpBot.Scripts
                                 }
                                 else
                                 {
-                                    if (target.HPP <= 0)
+                                    if (target.Id == 0 || target.HPP <= 0)
                                     {
                                         player.Pulling = false;
                                         continue;
@@ -139,7 +142,7 @@ namespace ExpBot.Scripts
                                         player.LockOn(target);
                                     }
                                     player.Moving = MoveWithinPullDistance(target.Distance, PullDistance, true);
-                                    if (IsRunningAndNotAggroed() && !player.Moving)
+                                    if (IsRunningAndNotDeadOrAggroed() && !player.Moving)
                                     {
                                         if (target.HPP <= 1)
                                         {
@@ -151,16 +154,20 @@ namespace ExpBot.Scripts
                                             }
                                         }
                                         bool pullFailed = false;
+                                        Stopwatch pullTimeoutWatch = new Stopwatch();
                                         if (PullWithSpell)
                                         {
                                             if (player.HasStatusEffect((short)APIConstants.StatusEffect.Silence))
                                             {
                                                 continue;
                                             }
-                                            while (IsRunningAndNotAggroed() && !player.CastSpell((uint)PullBlackMagicSpellId, "<t>"))
+                                            player.CastSpell((uint)PullBlackMagicSpellId, "<t>");
+                                            pullTimeoutWatch.Start();
+                                            while (IsRunningAndNotDeadOrAggroed() && target.TargetStatus != (uint)Status.InCombat)
                                             {
                                                 Thread.Sleep(100);
-                                                if (target.Distance > PullDistance || target.HPP <= 0)
+                                                if (target.Distance > PullDistance || target.HPP <= 0 ||
+                                                    pullTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(10).TotalMilliseconds)
                                                 {
                                                     pullFailed = true;
                                                     break;
@@ -170,6 +177,17 @@ namespace ExpBot.Scripts
                                         else
                                         {
                                             player.PullWithRanged();
+                                            pullTimeoutWatch.Start();
+                                            while (IsRunningAndNotDeadOrAggroed() && target.TargetStatus != (uint)Status.InCombat)
+                                            {
+                                                Thread.Sleep(100);
+                                                if ((target.Distance > PullDistance || target.HPP <= 0) ||
+                                                    pullTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(10).TotalMilliseconds)
+                                                {
+                                                    pullFailed = true;
+                                                    break;
+                                                }
+                                            }
                                         }
                                         if (pullFailed)
                                         {
@@ -189,7 +207,7 @@ namespace ExpBot.Scripts
                             {
                                 RunToLocation(idleLocation, IdleRadius);
                                 uint targetId;
-                                if (Running && (targetId = player.GetAggroedTargetId()) > 0)
+                                if (IsRunningAndNotDead() && (targetId = player.GetAggroedTargetId()) > 0)
                                 {
                                     player.SetTarget((int)targetId);
                                     if (target.HPP > 1)
@@ -210,6 +228,7 @@ namespace ExpBot.Scripts
                                     {
                                         BuffIfNecessary();
                                         HealHPIfNecessary();
+                                        RemoveStatusEffectsIfNecessary();
                                         if (target.Distance > MeleeRange + 0.5d)
                                         {
                                             continue;
@@ -224,13 +243,14 @@ namespace ExpBot.Scripts
                                 {
                                     BuffIfNecessary();
                                     HealHPIfNecessary();
+                                    RemoveStatusEffectsIfNecessary();
                                     UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
                                 }
                             }
                             break;
                         case (uint)Status.Dead:
                         case (uint)Status.Dying:
-                            Console.WriteLine("Player status: Dead");
+                            Console.WriteLine(DateTime.Now + ": Player status: Dead");
                             player.DeathWarp();
                             Running = false; // Kill the bot, we're done.
                             break;
@@ -238,7 +258,6 @@ namespace ExpBot.Scripts
                             Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
                             break;
                     }
-                    Thread.Sleep(250);
                 }
             }
             catch (Exception e)
@@ -247,8 +266,11 @@ namespace ExpBot.Scripts
             }
             finally
             {
-                Running = false;
-                if (aggroMonitorThread != null && !aggroMonitorThread.Join(2000))
+                player.Stop();
+                player.StopMovingBackward();
+                player.StopMovingForward();
+                if (aggroMonitorThread != null &&
+                    !aggroMonitorThread.Join(2000))
                 {
                     aggroMonitorThread.Interrupt();
                     if (!aggroMonitorThread.Join(2000))
@@ -256,7 +278,8 @@ namespace ExpBot.Scripts
                         aggroMonitorThread.Abort();
                     }
                 }
-                if (trizekRingReadyMonitor != null && !trizekRingReadyMonitor.Join(2000))
+                if (trizekRingReadyMonitor != null &&
+                    !trizekRingReadyMonitor.Join(2000))
                 {
                     trizekRingReadyMonitor.Interrupt();
                     if (!trizekRingReadyMonitor.Join(2000))
@@ -264,7 +287,8 @@ namespace ExpBot.Scripts
                         trizekRingReadyMonitor.Abort();
                     }
                 }
-                if (echadRingReadyMonitor != null && !echadRingReadyMonitor.Join(2000))
+                if (echadRingReadyMonitor != null &&
+                    !echadRingReadyMonitor.Join(2000))
                 {
                     echadRingReadyMonitor.Interrupt();
                     if (!echadRingReadyMonitor.Join(2000))
@@ -272,12 +296,17 @@ namespace ExpBot.Scripts
                         echadRingReadyMonitor.Abort();
                     }
                 }
+                Running = false;
             }
             Console.WriteLine("Exp Bot has stopped running");
         }
-        private bool IsRunningAndNotAggroed()
+        private bool IsRunningAndNotDeadOrAggroed()
         {
-            return Running && !aggroed;
+            return IsRunningAndNotDead() && !aggroed;
+        }
+        private bool IsRunningAndNotDead()
+        {
+            return Running && !player.IsDead();
         }
         private double DistanceToLocation(Location location)
         {
@@ -309,7 +338,7 @@ namespace ExpBot.Scripts
         }
         private bool MoveWithinPullDistance(double targetDistance, double distance, bool checkLockOn)
         {
-            if (IsRunningAndNotAggroed())
+            if (IsRunningAndNotDeadOrAggroed())
             {
                 if (checkLockOn && target.LockedOn == false)
                 {
@@ -349,7 +378,7 @@ namespace ExpBot.Scripts
         {
             if (Running)
             {
-                if(checkLockOn && target.LockedOn == false)
+                if (checkLockOn && target.LockedOn == false)
                 {
                     return false;
                 }
@@ -411,23 +440,35 @@ namespace ExpBot.Scripts
                 {
                     player.SetTarget(0);
                 }
+                uint initialMP = player.MP;
                 player.Heal();
+                Stopwatch restartRestMPPTimeout = new Stopwatch();
+                restartRestMPPTimeout.Start();
                 Stopwatch restMPPTimeout = new Stopwatch();
                 restMPPTimeout.Start();
-                while (IsRunningAndNotAggroed() && !player.IsDead() && player.MPP < 100)
+                while (IsRunningAndNotDeadOrAggroed() && player.MPP < 100)
                 {
+                    // If it's been 25 seconds, and the MP is still the same as it was
+                    // when we started resting. The Rest failed. Try again.
+                    if (restMPPTimeout.ElapsedMilliseconds >= TimeSpan.FromSeconds(25.0).TotalMilliseconds &&
+                        player.MP <= initialMP)
+                    {
+                        RestMPIfNecessary(restMPP);
+                        return;
+                    }
                     // 5 min timeout. Something gone wrong if it's still resting after 5mins.
-                    if (restMPPTimeout.ElapsedMilliseconds >= TimeSpan.FromSeconds(300).TotalMilliseconds)
+                    if (restMPPTimeout.ElapsedMilliseconds >= TimeSpan.FromSeconds(300.0).TotalMilliseconds)
                     {
                         break;
                     }
                     Thread.Sleep(100);
                 }
+                player.Heal(); // Get back up.
             }
         }
         private void UseCapPointExpPointEquipmentIfNecessary()
         {
-            if (IsRunningAndNotAggroed() && (UseCapPointEquipment || UseExpPointEquipment))
+            if (IsRunningAndNotDeadOrAggroed() && (UseCapPointEquipment || UseExpPointEquipment))
             {
                 ItemId currentRing1ItemId = (ItemId)player.GetEquippedItem(SlotId.Ring1).Id;
                 if (UseCapPointEquipment && trizekRingReady)
@@ -522,6 +563,26 @@ namespace ExpBot.Scripts
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.HasteSamba))
                     {
                         player.PerformJobAbility((uint)TPAbilityId.HasteSamba, "<me>");
+                    }
+                }
+            }
+        }
+        private void RemoveStatusEffectsIfNecessary()
+        {
+            if (Running)
+            {
+                if (((player.MainJob == (byte)Job.Dancer &&
+                    player.MainJobLevel >= 35) ||
+                    (player.SubJob == (byte)Job.Dancer &&
+                    player.SubJobLevel >= 35)) &&
+                    player.TP >= 200)
+                {
+                    if (player.HasStatusEffect((short)APIConstants.StatusEffect.Silence) ||
+                        player.HasStatusEffect((short)APIConstants.StatusEffect.Poison) ||
+                        player.HasStatusEffect((short)APIConstants.StatusEffect.Gravity) ||
+                        player.HasStatusEffect((short)APIConstants.StatusEffect.Blind))
+                    {
+                        player.PerformJobAbility((uint)TPAbilityId.HealingWaltz, "<me>");
                     }
                 }
             }
@@ -626,16 +687,17 @@ namespace ExpBot.Scripts
         }
         private void SummonTrustsIfNecessary(IList<TrustSpellId> trusts)
         {
-            if (Running && SummonTrusts)
+            if (IsRunningAndNotDeadOrAggroed() && SummonTrusts)
             {
-                if (trusts?.Count <= 0)
+                if (trusts?.Count <= 0 || party.PartyMembers?.Count == 6)
                 {
                     return;
                 }
 
                 IList<PartyMember> partyMembers;
-                while (IsRunningAndNotAggroed() && (partyMembers = party.PartyMembers)?.Count != 6)
+                while (IsRunningAndNotDeadOrAggroed() && (partyMembers = party.PartyMembers)?.Count != 6)
                 {
+                    Console.WriteLine(DateTime.Now + ": Summoning Trusts");
                     foreach (TrustSpellId trust in trusts)
                     {
                         bool alreadySummoned = false;
@@ -650,7 +712,7 @@ namespace ExpBot.Scripts
                         }
                         if (!alreadySummoned)
                         {
-                            if (IsRunningAndNotAggroed() && player.PlayerStatus != (uint)Status.InCombat && player.GetSpellRecastRemaining((int)trust) != 0)
+                            if (IsRunningAndNotDeadOrAggroed() && player.PlayerStatus != (uint)Status.InCombat && player.GetSpellRecastRemaining((int)trust) != 0)
                             {
                                 Thread.Sleep(100);
                             }

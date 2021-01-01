@@ -11,7 +11,8 @@ namespace ExpBot.ViewModel
     {
         void OnLoad();
         void Close();
-        bool StartStopBot();
+        bool StartBot();
+        bool StopBot();
         void Initialise(Process process);
         bool Initialised { get; set; }
         void AddTarget(string name);

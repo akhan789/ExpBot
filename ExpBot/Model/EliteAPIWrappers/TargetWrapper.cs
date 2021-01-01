@@ -29,8 +29,9 @@ namespace ExpBot.Model.EliteAPIWrappers
             switch (propertyName)
             {
                 case "TargetStatus":
+                case "TargetIndex":
+                case "EntryPointer":
                 case "Id":
-                case "TargetId":
                 case "Name":
                 case "HPP":
                 case "LockedOn":
@@ -39,14 +40,30 @@ namespace ExpBot.Model.EliteAPIWrappers
                 case "Y":
                 case "Z":
                 case "H":
+                case "HasSubTarget":
+                case "SubTargetIndex":
+                case "SubTargetEntryPointer":
+                case "SubTargetId":
+                case "SubTargetName":
+                case "SubTargetHPP":
                 default:
                     break;
             }
         }
         public uint TargetStatus
         {
-            get => api.Entity.GetEntity(Convert.ToInt32(Id)).Status;
+            get => api.Entity.GetEntity(Convert.ToInt32(TargetIndex)).Status;
             set => SetTarget("TargetStatus", value);
+        }
+        public uint TargetIndex
+        {
+            get => api.Target.GetTargetInfo().TargetIndex;
+            set => SetTarget("TargetIndex", value);
+        }
+        public uint EntryPointer
+        {
+            get => api.Target.GetTargetInfo().TargetEntryPointer;
+            set => SetTarget("EntryPointer", value);
         }
         public uint Id
         {
@@ -93,9 +110,41 @@ namespace ExpBot.Model.EliteAPIWrappers
             get => api.Entity.GetEntity((int)api.Target.GetTargetInfo().TargetIndex).H;
             set => SetTarget("H", value);
         }
+        public bool HasSubTarget
+        {
+            get => api.Target.GetTargetInfo().HasSubTarget;
+            set => SetTarget("HasSubTarget", value);
+        }
+        public uint SubTargetIndex
+        {
+            get => api.Target.GetTargetInfo().SubTargetIndex;
+            set => SetTarget("SubTargetIndex", value);
+        }
+        public uint SubTargetEntryPointer
+        {
+            get => api.Target.GetTargetInfo().SubTargetEntryPointer;
+            set => SetTarget("SubTargetEntryPointer", value);
+        }
+        public uint SubTargetId
+        {
+            get => api.Target.GetTargetInfo().SubTargetId;
+            set => SetTarget("SubTargetId", value);
+        }
+        public string SubTargetName
+        {
+            get => api.Target.GetTargetInfo().SubTargetName;
+            set => SetTarget("SubTargetName", value);
+        }
+        public int SubTargetHPP
+        {
+            get => api.Target.GetTargetInfo().SubTargetHealthPercent;
+            set => SetTarget("SubTargetHealthPercent", value);
+        }
         private void TargetMonitor()
         {
             uint targetStatus = 0;
+            uint targetIndex = 0;
+            uint entryPointer = 0;
             uint id = 0;
             string name = "";
             int hpp = 0;
@@ -105,12 +154,28 @@ namespace ExpBot.Model.EliteAPIWrappers
             float y = 0.0f;
             float z = 0.0f;
             float h = 0.0f;
+            bool hasSubTarget = false;
+            uint subTargetIndex = 0;
+            uint subTargetEntryPointer = 0;
+            uint subTargetId = 0;
+            string subTargetName = "";
+            int subTargetHPP = 0;
             while (true)
             {
                 if (targetStatus != TargetStatus)
                 {
                     targetStatus = TargetStatus;
                     OnPropertyChanged("TargetStatus");
+                }
+                if (targetIndex != TargetIndex)
+                {
+                    targetIndex = TargetIndex;
+                    OnPropertyChanged("TargetIndex");
+                }
+                if (entryPointer != EntryPointer)
+                {
+                    entryPointer = EntryPointer;
+                    OnPropertyChanged("EntryPointer");
                 }
                 if (id != Id)
                 {
@@ -156,6 +221,36 @@ namespace ExpBot.Model.EliteAPIWrappers
                 {
                     h = H;
                     OnPropertyChanged("H");
+                }
+                if (hasSubTarget != HasSubTarget)
+                {
+                    hasSubTarget = HasSubTarget;
+                    OnPropertyChanged("HasSubTarget");
+                }
+                if (subTargetIndex != SubTargetIndex)
+                {
+                    subTargetIndex = SubTargetIndex;
+                    OnPropertyChanged("SubTargetIndex");
+                }
+                if (subTargetEntryPointer != SubTargetEntryPointer)
+                {
+                    subTargetEntryPointer = SubTargetEntryPointer;
+                    OnPropertyChanged("SubTargetEntryPointer");
+                }
+                if (subTargetId != SubTargetId)
+                {
+                    subTargetId = SubTargetId;
+                    OnPropertyChanged("SubTargetId");
+                }
+                if (subTargetName != SubTargetName)
+                {
+                    subTargetName = SubTargetName;
+                    OnPropertyChanged("SubTargetName");
+                }
+                if (subTargetHPP != SubTargetHPP)
+                {
+                    subTargetHPP = SubTargetHPP;
+                    OnPropertyChanged("SubTargetHPP");
                 }
                 Thread.Sleep(100);
             }

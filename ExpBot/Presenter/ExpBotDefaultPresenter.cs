@@ -34,76 +34,76 @@ namespace ExpBot.ViewModel
             model.Unload();
             view.CloseView();
         }
-        public bool StartStopBot()
+        public bool StartBot()
+        {
+            IScript script = model.Script;
+            if (Initialised && script == null || !script.Running)
+            {
+                script = model.Script = new ExpScript(model.Player, model.Target, model.Party);
+                script.PropertyChanged += Script_PropertyChanged;
+                script.Running = true;
+                ((IExpScript)script).KeepWithinMeleeRange = model.KeepWithinMeleeRange;
+                ((IExpScript)script).RestMP = model.RestMP;
+                ((IExpScript)script).UseWeaponSkill = model.UseWeaponSkill;
+                ((IExpScript)script).SummonTrusts = model.SummonTrusts;
+                ((IExpScript)script).UseCapPointEquipment = model.UseCapPointEquipment;
+                ((IExpScript)script).UseExpPointEquipment = model.UseExpPointEquipment;
+                ((IExpScript)script).UseAutoHeal = model.UseAutoHeal;
+                ((IExpScript)script).PullWithSpell = model.PullWithSpell;
+                ((IExpScript)script).TargetNames = model.SelectedTargetList;
+                ((IExpScript)script).TrustNames = model.SelectedTrustList;
+                ((IExpScript)script).PullDistance = model.PullDistance;
+                ((IExpScript)script).PullSearchRadius = model.PullSearchRadius;
+                ((IExpScript)script).MeleeRange = model.MeleeRange;
+                ((IExpScript)script).RestMPP = model.RestMPP;
+                ((IExpScript)script).IdleRadius = model.IdleRadius;
+                ((IExpScript)script).WeaponSkillTP = model.WeaponSkillTP;
+                ((IExpScript)script).WeaponSkillId = model.WeaponSkillId;
+                ((IExpScript)script).PullBlackMagicSpellId = model.PullBlackMagicSpellId;
+
+                botThread = new Thread(new ThreadStart(script.Run))
+                {
+                    IsBackground = true
+                };
+                botThread.Start();
+                return true;
+            }
+            return false;
+        }
+        public bool StopBot()
         {
             IScript script = model.Script;
             if (Initialised)
             {
-                if (script == null || !script.Running)
+                script.Running = false;
+                if (botThread != null && !botThread.Join(2000))
                 {
-                    script = model.Script = new ExpScript(model.Player, model.Target, model.Party);
-                    //script.PropertyChanged += Script_PropertyChanged;
-                    script.Running = true;
-                    ((IExpScript)script).KeepWithinMeleeRange = model.KeepWithinMeleeRange;
-                    ((IExpScript)script).RestMP = model.RestMP;
-                    ((IExpScript)script).UseWeaponSkill = model.UseWeaponSkill;
-                    ((IExpScript)script).SummonTrusts = model.SummonTrusts;
-                    ((IExpScript)script).UseCapPointEquipment = model.UseCapPointEquipment;
-                    ((IExpScript)script).UseExpPointEquipment = model.UseExpPointEquipment;
-                    ((IExpScript)script).UseAutoHeal = model.UseAutoHeal;
-                    ((IExpScript)script).PullWithSpell = model.PullWithSpell;
-                    ((IExpScript)script).TargetNames = model.SelectedTargetList;
-                    ((IExpScript)script).TrustNames = model.SelectedTrustList;
-                    ((IExpScript)script).PullDistance = model.PullDistance;
-                    ((IExpScript)script).PullSearchRadius = model.PullSearchRadius;
-                    ((IExpScript)script).MeleeRange = model.MeleeRange;
-                    ((IExpScript)script).RestMPP = model.RestMPP;
-                    ((IExpScript)script).IdleRadius = model.IdleRadius;
-                    ((IExpScript)script).WeaponSkillTP = model.WeaponSkillTP;
-                    ((IExpScript)script).WeaponSkillId = model.WeaponSkillId;
-                    ((IExpScript)script).PullBlackMagicSpellId = model.PullBlackMagicSpellId;
-
-                    botThread = new Thread(new ThreadStart(script.Run))
+                    botThread.Interrupt();
+                    if (!botThread.Join(2000))
                     {
-                        IsBackground = true
-                    };
-                    botThread.Start();
-                    return script.Running;
+                        botThread.Abort();
+                    }
                 }
-                else
+                return true;
+            }
+            else if (script != null || botThread != null)
+            {
+                if (script != null)
                 {
                     script.Running = false;
-                    if (botThread != null && !botThread.Join(2000))
-                    {
-                        botThread.Interrupt();
-                        if (!botThread.Join(2000))
-                        {
-                            botThread.Abort();
-                        }
-                    }
-                    return script.Running;
+                    model.Script = null;
                 }
-            }
-            else
-            {
-                if (script != null || botThread != null)
+                if (botThread != null && !botThread.Join(2000))
                 {
-                    if (script != null)
+                    botThread.Interrupt();
+                    if (!botThread.Join(2000))
                     {
-                        script.Running = false;
-                        model.Script = null;
-                    }
-                    if (botThread != null && !botThread.Join(2000))
-                    {
-                        botThread.Interrupt();
-                        if (!botThread.Join(2000))
-                        {
-                            botThread.Abort();
-                        }
+                        botThread.Abort();
                     }
                 }
-                return false;
+                return true;
             }
+            return false;
         }
         public void Initialise(Process process)
         {

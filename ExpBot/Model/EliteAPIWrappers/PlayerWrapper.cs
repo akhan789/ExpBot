@@ -97,10 +97,17 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public void LockOn(TargetWrapper target)
         {
+            Stopwatch lockOnTimeoutWatch = new Stopwatch();
+            lockOnTimeoutWatch.Start();
             while (target.HPP > 1 && !target.LockedOn)
             {
                 api.ThirdParty.SendString("/lockon <t>");
                 Thread.Sleep(500);
+                if (lockOnTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(5).TotalMilliseconds)
+                {
+                    SetTarget(0);
+                    break;
+                }
             }
         }
         public void UnLockOn(TargetWrapper target)
@@ -158,7 +165,7 @@ namespace ExpBot.Model.EliteAPIWrappers
                 // Unfortunately it's not straight-forward to find out
                 // if a monster is targetting the player.
                 if (entity.HealthPercent != 0 &&
-                    entity.Distance <= 7.5 &&
+                    entity.Distance <= 25 &&
                     entity.Status == (uint)Status.InCombat)
                 {
                     break;
@@ -189,6 +196,102 @@ namespace ExpBot.Model.EliteAPIWrappers
                     if (!targets.Contains(entity.Name))
                     {
                         targets.Add(entity.Name);
+                    }
+                    if (entity.Name.StartsWith("Chest"))
+                    {
+                        Console.WriteLine("Chest: TargetID:" + Convert.ToInt32(entity.TargetID));
+                        Console.WriteLine("Chest: ActionTimer1:" + entity.ActionTimer1);
+                        Console.WriteLine("Chest: ActionTimer2:" + entity.ActionTimer2);
+                        for (int i = 0; x < entity.Animations.Length; i++)
+                        {
+                            Console.WriteLine("Chest: Animations[" + i + "]:" + entity.Animations[i]);
+                        }
+                        Console.WriteLine("Chest: Body:" + entity.Body);
+                        Console.WriteLine("Chest: ClaimID:" + entity.ClaimID);
+                        Console.WriteLine("Chest: CostumeID:" + entity.CostumeID);
+                        Console.WriteLine("Chest: Distance:" + entity.Distance);
+                        Console.WriteLine("Chest: Face:" + entity.Face);
+                        Console.WriteLine("Chest: Feet:" + entity.Feet);
+                        Console.WriteLine("Chest: FishingTimer:" + entity.FishingTimer);
+                        Console.WriteLine("Chest: H:" + entity.H);
+                        Console.WriteLine("Chest: Hands:" + entity.Hands);
+                        Console.WriteLine("Chest: Head:" + entity.Head);
+                        Console.WriteLine("Chest: HealthPercent:" + entity.HealthPercent);
+                        Console.WriteLine("Chest: Legs:" + entity.Legs);
+                        Console.WriteLine("Chest: Main:" + entity.Main);
+                        Console.WriteLine("Chest: ManaPercent:" + entity.ManaPercent);
+                        Console.WriteLine("Chest: ModelSize:" + entity.ModelSize);
+                        Console.WriteLine("Chest: Name:" + entity.Name);
+                        Console.WriteLine("Chest: PetIndex:" + entity.PetIndex);
+                        Console.WriteLine("Chest: PetOwnerID:" + entity.PetOwnerID);
+                        Console.WriteLine("Chest: Race:" + entity.Race);
+                        Console.WriteLine("Chest: Ranged:" + entity.Ranged);
+                        Console.WriteLine("Chest: Render0000:" + entity.Render0000);
+                        Console.WriteLine("Chest: Render0001:" + entity.Render0001);
+                        Console.WriteLine("Chest: Render0002:" + entity.Render0002);
+                        Console.WriteLine("Chest: Render0003:" + entity.Render0003);
+                        Console.WriteLine("Chest: Render0004:" + entity.Render0004);
+                        Console.WriteLine("Chest: ServerID:" + entity.ServerID);
+                        Console.WriteLine("Chest: SpawnFlags:" + entity.SpawnFlags);
+                        Console.WriteLine("Chest: Speed:" + entity.Speed);
+                        Console.WriteLine("Chest: SpeedAnimation:" + entity.SpeedAnimation);
+                        Console.WriteLine("Chest: Status:" + entity.Status);
+                        Console.WriteLine("Chest: Sub:" + entity.Sub);
+                        Console.WriteLine("Chest: TargetingIndex:" + entity.TargetingIndex);
+                        Console.WriteLine("Chest: Type:" + entity.Type);
+                        Console.WriteLine("Chest: WarpPointer:" + entity.WarpPointer);
+                        Console.WriteLine("Chest: X:" + entity.X);
+                        Console.WriteLine("Chest: Y:" + entity.Y);
+                        Console.WriteLine("Chest: Z:" + entity.Z);
+                        Console.WriteLine("\n");
+                    }
+                    else if (entity.Name.StartsWith("Coffer"))
+                    {
+                        Console.WriteLine("Coffer: " + Convert.ToInt32(entity.TargetID));
+                        Console.WriteLine("Coffer: ActionTimer1:" + entity.ActionTimer1);
+                        Console.WriteLine("Coffer: ActionTimer2:" + entity.ActionTimer2);
+                        for (int i = 0; x < entity.Animations.Length; i++)
+                        {
+                            Console.WriteLine("Coffer: Animations[" + i + "]:" + entity.Animations[i]);
+                        }
+                        Console.WriteLine("Coffer: Body:" + entity.Body);
+                        Console.WriteLine("Coffer: ClaimID:" + entity.ClaimID);
+                        Console.WriteLine("Coffer: CostumeID:" + entity.CostumeID);
+                        Console.WriteLine("Coffer: Distance:" + entity.Distance);
+                        Console.WriteLine("Coffer: Face:" + entity.Face);
+                        Console.WriteLine("Coffer: Feet:" + entity.Feet);
+                        Console.WriteLine("Coffer: FishingTimer:" + entity.FishingTimer);
+                        Console.WriteLine("Coffer: H:" + entity.H);
+                        Console.WriteLine("Coffer: Hands:" + entity.Hands);
+                        Console.WriteLine("Coffer: Head:" + entity.Head);
+                        Console.WriteLine("Coffer: HealthPercent:" + entity.HealthPercent);
+                        Console.WriteLine("Coffer: Legs:" + entity.Legs);
+                        Console.WriteLine("Coffer: Main:" + entity.Main);
+                        Console.WriteLine("Coffer: ManaPercent:" + entity.ManaPercent);
+                        Console.WriteLine("Coffer: ModelSize:" + entity.ModelSize);
+                        Console.WriteLine("Coffer: Name:" + entity.Name);
+                        Console.WriteLine("Coffer: PetIndex:" + entity.PetIndex);
+                        Console.WriteLine("Coffer: PetOwnerID:" + entity.PetOwnerID);
+                        Console.WriteLine("Coffer: Race:" + entity.Race);
+                        Console.WriteLine("Coffer: Ranged:" + entity.Ranged);
+                        Console.WriteLine("Coffer: Render0000:" + entity.Render0000);
+                        Console.WriteLine("Coffer: Render0001:" + entity.Render0001);
+                        Console.WriteLine("Coffer: Render0002:" + entity.Render0002);
+                        Console.WriteLine("Coffer: Render0003:" + entity.Render0003);
+                        Console.WriteLine("Coffer: Render0004:" + entity.Render0004);
+                        Console.WriteLine("Coffer: ServerID:" + entity.ServerID);
+                        Console.WriteLine("Coffer: SpawnFlags:" + entity.SpawnFlags);
+                        Console.WriteLine("Coffer: Speed:" + entity.Speed);
+                        Console.WriteLine("Coffer: SpeedAnimation:" + entity.SpeedAnimation);
+                        Console.WriteLine("Coffer: Status:" + entity.Status);
+                        Console.WriteLine("Coffer: Sub:" + entity.Sub);
+                        Console.WriteLine("Coffer: TargetingIndex:" + entity.TargetingIndex);
+                        Console.WriteLine("Coffer: Type:" + entity.Type);
+                        Console.WriteLine("Coffer: WarpPointer:" + entity.WarpPointer);
+                        Console.WriteLine("Coffer: X:" + entity.X);
+                        Console.WriteLine("Coffer: Y:" + entity.Y);
+                        Console.WriteLine("Coffer: Z:" + entity.Z);
+                        Console.WriteLine("\n");
                     }
                 }
             }
@@ -294,8 +397,8 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public void PullWithRanged()
         {
+            Thread.Sleep(1000);
             api.ThirdParty.SendString("/ra <t>");
-            Thread.Sleep(4500);
         }
         public int GetTPAbilityRecast(TPAbilityId tpAbilityId)
         {
@@ -368,7 +471,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             IList<TPAbilityId> weaponSkills = new List<TPAbilityId>();
             foreach (TPAbilityId id in Enum.GetValues(typeof(TPAbilityId)).Cast<TPAbilityId>().ToList())
             {
-                if (api.Player.HasWeaponSkill((uint)id))
+                if (HasWeaponSkill(id))
                 {
                     weaponSkills.Add(id);
                 }
@@ -585,7 +688,8 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public bool HasWeaponSkill(TPAbilityId id)
         {
-            return api.Player.HasWeaponSkill((uint)id);
+            IAbility ability = api.Resources.GetAbility((uint)id);
+            return ability.TimerID == 900 && api.Player.HasWeaponSkill(ability.ID);
         }
         public bool HasJobAbility(JobAbilityId id)
         {
@@ -609,8 +713,13 @@ namespace ExpBot.Model.EliteAPIWrappers
         }
         public uint Id
         {
-            get => api.Player.ServerID;
+            get => api.Party.GetPartyMember(0).ID;
             set => SetPlayer("Id", value);
+        }
+        public int ServerId
+        {
+            get => api.Player.ServerId;
+            set => SetPlayer("ServerId", value);
         }
         public byte MainJob
         {
@@ -730,6 +839,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         private void PlayerMonitor()
         {
             uint id = 0;
+            int serverId = 0;
             int job = 0;
             int subJob = 0;
             string name = "";
@@ -757,6 +867,11 @@ namespace ExpBot.Model.EliteAPIWrappers
                 {
                     id = Id;
                     OnPropertyChanged("Id");
+                }
+                if (serverId != ServerId)
+                {
+                    serverId = ServerId;
+                    OnPropertyChanged("ServerId");
                 }
                 if (job != MainJob)
                 {

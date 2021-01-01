@@ -82,13 +82,7 @@ namespace ExpBot.Views
             {
                 model.PullBlackMagicSpellId = (BlackMagicSpellId)blackMagicSpellId;
             }
-            if (presenter.StartStopBot())
-            {
-                btnStart.Enabled = false;
-                btnStop.Enabled = true;
-                tabctrlBotControls.Enabled = false;
-            }
-            else
+            if (!presenter.StartBot())
             {
                 MessageBox.Show("Load Final Fantasy XI before attempting to start the script");
             }
@@ -97,11 +91,8 @@ namespace ExpBot.Views
         {
             new Thread(new ThreadStart(delegate
             {
-                presenter.StartStopBot();
+                presenter.StopBot();
             })).Start();
-            btnStart.Enabled = true;
-            btnStop.Enabled = false;
-            tabctrlBotControls.Enabled = true;
         }
         private void chkAlwaysOnTop_CheckedChanged(object sender, EventArgs e)
         {
@@ -483,21 +474,33 @@ namespace ExpBot.Views
             {
                 Invoke(new MethodInvoker(delegate
                 {
-                    if (model.Script != null && !model.Script.Running)
+                    if (model?.Script.Running == false)
                     {
                         btnStart.Enabled = true;
                         btnStop.Enabled = false;
                         tabctrlBotControls.Enabled = true;
                     }
+                    else if (model?.Script.Running == true)
+                    {
+                        btnStart.Enabled = false;
+                        btnStop.Enabled = true;
+                        tabctrlBotControls.Enabled = false;
+                    }
                 }));
             }
             else
             {
-                if (model.Script != null && !model.Script.Running)
+                if (model?.Script.Running == false)
                 {
                     btnStart.Enabled = true;
                     btnStop.Enabled = false;
                     tabctrlBotControls.Enabled = true;
+                }
+                else if (model?.Script.Running == true)
+                {
+                    btnStart.Enabled = false;
+                    btnStop.Enabled = true;
+                    tabctrlBotControls.Enabled = false;
                 }
             }
         }
