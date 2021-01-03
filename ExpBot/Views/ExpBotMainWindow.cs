@@ -60,6 +60,7 @@ namespace ExpBot.Views
             model.RestMP = chkRestMPP.Checked;
             model.UseWeaponSkill = chkUseWSTP.Checked;
             model.SummonTrusts = chkSummonTrusts.Checked;
+            model.ReturnToIdleLocation = chkReturnToIdleLocation.Checked;
             model.UseCapPointEquipment = chkUseCapPointEquip.Checked;
             model.UseExpPointEquipment = chkUseExpPointEquip.Checked;
             model.UseAutoHeal = chkAutoHeal.Checked;
@@ -191,6 +192,17 @@ namespace ExpBot.Views
             else
             {
                 model.SummonTrusts = false;
+            }
+        }
+        private void chkReturnToIdleLocation_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkReturnToIdleLocation.Checked)
+            {
+                model.ReturnToIdleLocation = true;
+            }
+            else
+            {
+                model.ReturnToIdleLocation = false;
             }
         }
         private void chkUseCapPointEquip_CheckedChanged(object sender, EventArgs e)

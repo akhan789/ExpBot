@@ -23,6 +23,7 @@ namespace ExpBot.Model
         private bool restMP;
         private bool useWeaponSkill;
         private bool summonTrusts;
+        private bool returnToIdleLocation;
         private bool useCapPointEquipment;
         private bool useExpPointEquipment;
         private bool useAutoHeal;
@@ -121,6 +122,11 @@ namespace ExpBot.Model
         {
             get => summonTrusts;
             set => summonTrusts = value;
+        }
+        public bool ReturnToIdleLocation
+        {
+            get => returnToIdleLocation;
+            set => returnToIdleLocation = value;
         }
         public bool UseCapPointEquipment
         {

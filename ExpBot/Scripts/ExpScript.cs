@@ -9,7 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows.Forms;
 using static EliteMMO.API.EliteAPI;
 using static ExpBot.Model.EliteAPIWrappers.APIConstants;
 
@@ -82,11 +81,19 @@ namespace ExpBot.Scripts
             };
             aggroMonitorThread.Start();
 
+            //Stopwatch nmCampWatch = new Stopwatch();
+            //nmCampWatch.Start();
+            //Console.WriteLine(DateTime.Now + ": Bot Started");
             // Actual Bot
             try
             {
                 while (Running)
                 {
+                    //if (nmCampWatch.ElapsedMilliseconds >= TimeSpan.FromHours(5).TotalMilliseconds)
+                    //{
+                    //    Console.WriteLine(DateTime.Now + ": Bot Stopping");
+                    //    break;
+                    //}
                     //player.CastSpell((uint)WhiteMagicSpellId.Dia, "<t>");
                     //player.CastSpell((uint)BlueMagicSpellId.Bludgeon, "<t>");
                     switch (player.PlayerStatus)
@@ -318,6 +325,7 @@ namespace ExpBot.Scripts
             {
                 if (DistanceToLocation(location) > distanceRadius)
                 {
+                    player.FaceTarget(location.X, location.Z);
                     player.Move(location.X, location.Y, location.Z);
                     Stopwatch stuckWatch = new Stopwatch();
                     stuckWatch.Start();
@@ -741,15 +749,22 @@ namespace ExpBot.Scripts
         {
             while (Running)
             {
-                if (player.GetAggroedTargetId() > 0)
+                try
                 {
-                    aggroed = true;
+                    if (player.GetAggroedTargetId() > 0)
+                    {
+                        aggroed = true;
+                    }
+                    else
+                    {
+                        aggroed = false;
+                    }
+                    Thread.Sleep(100);
                 }
-                else
+                catch (ThreadInterruptedException)
                 {
-                    aggroed = false;
+                    break;
                 }
-                Thread.Sleep(100);
             }
         }
         private void TrizekRingReadyMonitor()
@@ -759,12 +774,19 @@ namespace ExpBot.Scripts
             readyStopWatch.Start();
             while (Running)
             {
-                if (readyStopWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(player.GetItem(ItemId.TrizekRing).RecastDelay).TotalMilliseconds)
+                try
                 {
-                    trizekRingReady = true;
-                    return;
+                    if (readyStopWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(player.GetItem(ItemId.TrizekRing).RecastDelay).TotalMilliseconds)
+                    {
+                        trizekRingReady = true;
+                        return;
+                    }
+                    Thread.Sleep(100);
                 }
-                Thread.Sleep(100);
+                catch (ThreadInterruptedException)
+                {
+                    break;
+                }
             }
         }
         private void EchadRingReadyMonitor()
@@ -774,12 +796,19 @@ namespace ExpBot.Scripts
             readyStopWatch.Start();
             while (Running)
             {
-                if (readyStopWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(player.GetItem(ItemId.EchadRing).RecastDelay).TotalMilliseconds)
+                try
                 {
-                    echadRingReady = true;
-                    return;
+                    if (readyStopWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(player.GetItem(ItemId.EchadRing).RecastDelay).TotalMilliseconds)
+                    {
+                        echadRingReady = true;
+                        return;
+                    }
+                    Thread.Sleep(100);
                 }
-                Thread.Sleep(100);
+                catch (ThreadInterruptedException)
+                {
+                    break;
+                }
             }
         }
         public bool Running

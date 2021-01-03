@@ -19,6 +19,7 @@ namespace ExpBot.Model
         bool RestMP { get; set; }
         bool UseWeaponSkill { get; set; }
         bool SummonTrusts { get; set; }
+        bool ReturnToIdleLocation { get; set; }
         bool UseCapPointEquipment { get; set; }
         bool UseExpPointEquipment { get; set; }
         bool UseAutoHeal { get; set; }
