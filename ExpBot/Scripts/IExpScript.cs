@@ -25,6 +25,7 @@ namespace ExpBot.Scripts
         double MeleeRange { get; set; }
         double PullDistance { get; set; }
         float PullSearchRadius { get; set; }
+        float PullDelay { get; set; }
         float IdleRadius { get; set; }
     }
 }

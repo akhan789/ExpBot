@@ -48,7 +48,9 @@ namespace ExpBot.Scripts
         private double meleeRange = 2.0d;
         private double pullDistance = 18.0d;
         private float pullSearchRadius = 50.0f;
+        private float pullDelay = 4.0f;
         private float idleRadius = 1.0f;
+        private float aggroedTargetId = 0.0f;
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName = null)
@@ -80,7 +82,9 @@ namespace ExpBot.Scripts
                 IsBackground = true
             };
             aggroMonitorThread.Start();
-
+            String skillchainLogText = null;
+            Stopwatch skillchainTimer = new Stopwatch();
+            Stopwatch magicBurstTimer = new Stopwatch();
             //Stopwatch nmCampWatch = new Stopwatch();
             //nmCampWatch.Start();
             //Console.WriteLine(DateTime.Now + ": Bot Started");
@@ -102,6 +106,15 @@ namespace ExpBot.Scripts
                             player.Heal(); // Stand back up.
                             break;
                         case (uint)Status.Idle:
+                            if (skillchainTimer.IsRunning)
+                            {
+                                skillchainTimer.Reset();
+                            }
+                            if (magicBurstTimer.IsRunning)
+                            {
+                                magicBurstTimer.Reset();
+                                skillchainLogText = null;
+                            }
                             if (IsRunningAndNotDeadOrAggroed())
                             {
                                 if (!player.Pulling)
@@ -109,7 +122,7 @@ namespace ExpBot.Scripts
                                     player.SetTarget(0);
                                     RunToLocation(idleLocation, IdleRadius);
                                     SummonTrustsIfNecessary(trusts);
-                                    RestMPIfNecessary(RestMPP);
+                                    RestMPIfNecessary();
                                     UseCapPointExpPointEquipmentIfNecessary();
                                     BuffIfNecessary();
                                     HealHPIfNecessary();
@@ -134,12 +147,14 @@ namespace ExpBot.Scripts
                                     }
                                     if (player.HasStatusEffect((short)APIConstants.StatusEffect.Gravity))
                                     {
+                                        player.Pulling = false;
                                         continue;
                                     }
                                     if (PullWithSpell)
                                     {
                                         if (player.HasStatusEffect((short)APIConstants.StatusEffect.Silence))
                                         {
+                                            player.Pulling = false;
                                             continue;
                                         }
                                     }
@@ -166,6 +181,7 @@ namespace ExpBot.Scripts
                                         {
                                             if (player.HasStatusEffect((short)APIConstants.StatusEffect.Silence))
                                             {
+                                                player.Pulling = false;
                                                 continue;
                                             }
                                             player.CastSpell((uint)PullBlackMagicSpellId, "<t>");
@@ -173,8 +189,15 @@ namespace ExpBot.Scripts
                                             while (IsRunningAndNotDeadOrAggroed() && target.TargetStatus != (uint)Status.InCombat)
                                             {
                                                 Thread.Sleep(100);
+
+                                                if (player.GetChatLog().Contains("Unable to see the"))
+                                                {
+                                                    player.Pulling = false;
+                                                    pullFailed = true;
+                                                    break;
+                                                }
                                                 if (target.Distance > PullDistance || target.HPP <= 0 ||
-                                                    pullTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(10).TotalMilliseconds)
+                                                    pullTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(6).TotalMilliseconds)
                                                 {
                                                     pullFailed = true;
                                                     break;
@@ -188,35 +211,53 @@ namespace ExpBot.Scripts
                                             while (IsRunningAndNotDeadOrAggroed() && target.TargetStatus != (uint)Status.InCombat)
                                             {
                                                 Thread.Sleep(100);
+
+                                                if (player.GetChatLog().Contains("Unable to see the"))
+                                                {
+                                                    player.Pulling = false;
+                                                    pullFailed = true;
+                                                    break;
+                                                }
                                                 if ((target.Distance > PullDistance || target.HPP <= 0) ||
-                                                    pullTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(10).TotalMilliseconds)
+                                                    pullTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(6).TotalMilliseconds)
                                                 {
                                                     pullFailed = true;
                                                     break;
                                                 }
                                             }
                                         }
-                                        if (pullFailed)
+                                        if (aggroed || pullFailed)
                                         {
                                             continue;
                                         }
                                         if (DistanceToLocation(idleLocation) > IdleRadius && target.LockedOn)
                                         {
-                                            player.UnLockOn(target);
+                                            if (!player.UnLockOn(target))
+                                            {
+                                                continue;
+                                            }
                                         }
                                         RunToLocation(idleLocation, IdleRadius);
                                         player.Attack(target);
                                         player.Pulling = false;
+                                        Thread.Sleep(Convert.ToInt32(TimeSpan.FromSeconds(pullDelay).TotalMilliseconds));
                                     }
                                 }
                             }
                             else
                             {
-                                RunToLocation(idleLocation, IdleRadius);
-                                uint targetId;
-                                if (IsRunningAndNotDead() && (targetId = player.GetAggroedTargetId()) > 0)
+                                player.Pulling = false;
+                                if (DistanceToLocation(idleLocation) > IdleRadius && target.LockedOn)
                                 {
-                                    player.SetTarget((int)targetId);
+                                    if (!player.UnLockOn(target))
+                                    {
+                                        continue;
+                                    }
+                                }
+                                RunToLocation(idleLocation, IdleRadius);
+                                if (IsRunningAndNotDead() && (aggroedTargetId) > 0)
+                                {
+                                    player.SetTarget((int)aggroedTargetId);
                                     if (target.HPP > 1)
                                     {
                                         player.Attack(target);
@@ -233,6 +274,25 @@ namespace ExpBot.Scripts
                                     player.Moving = MoveWithinDistance(target.Distance, MeleeRange, true);
                                     if (!player.Moving)
                                     {
+                                        bool magicBurstSuccessful = false;
+                                        if (!magicBurstTimer.IsRunning &&
+                                            (skillchainLogText = player.GetChatLog()).Contains("Skillchain:"))
+                                        {
+                                            magicBurstTimer.Start();
+                                            Console.WriteLine("Magic Burst timer starting");
+                                        }
+                                        if (magicBurstTimer.IsRunning)
+                                        {
+                                            Console.WriteLine("Performing magic burst for log: " + skillchainLogText);
+                                            magicBurstSuccessful = PerformMagicBurstIfAvailable(skillchainLogText);
+                                            if (!magicBurstSuccessful ||
+                                            magicBurstTimer.ElapsedMilliseconds >= TimeSpan.FromSeconds(10).TotalMilliseconds)
+                                            {
+                                                magicBurstTimer.Reset();
+                                                skillchainLogText = null;
+                                                Console.WriteLine("Magic Burst timer stopped");
+                                            }
+                                        }
                                         BuffIfNecessary();
                                         HealHPIfNecessary();
                                         RemoveStatusEffectsIfNecessary();
@@ -242,21 +302,116 @@ namespace ExpBot.Scripts
                                         }
                                         else
                                         {
-                                            UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                            if (skillchainTimer.IsRunning)
+                                            {
+                                                long elapsedSeconds = skillchainTimer.ElapsedMilliseconds;
+                                                if (elapsedSeconds >= TimeSpan.FromSeconds(5).TotalMilliseconds)
+                                                {
+                                                    Console.WriteLine("Stopping Skillchain Timer");
+                                                    skillchainTimer.Reset();
+                                                }
+                                                else if (elapsedSeconds >= TimeSpan.FromSeconds(2).TotalMilliseconds)
+                                                {
+                                                    Console.WriteLine("Ending Darkness Skillchain - Performing Sinker Drill");
+                                                    player.CastSpell((uint)BlueMagicSpellId.SinkerDrill, "<t>");
+                                                    skillchainTimer.Reset();
+                                                }
+                                            }
+                                            else if (!skillchainTimer.IsRunning &&
+                                                player.MainJob == (byte)Job.BlueMage &&
+                                                player.TP >= WeaponSkillTP)
+                                            {
+                                                if (player.CanCastSpell((uint)BlueMagicSpellId.SinkerDrill) &&
+                                                    player.PerformJobAbility((uint)JobAbilityId.ChainAffinity, "<me>"))
+                                                {
+                                                    Console.WriteLine("Starting Darkness Skillchain - Performing Chant Du Cygne");
+                                                    UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                                    skillchainTimer.Start();
+                                                }
+                                                else
+                                                {
+                                                    UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                            }
                                         }
                                     }
                                 }
                                 else
                                 {
+                                    bool magicBurstSuccessful = false;
+                                    if (!magicBurstTimer.IsRunning &&
+                                        (skillchainLogText = player.GetChatLog()).Contains("Skillchain:"))
+                                    {
+                                        magicBurstTimer.Start();
+                                        Console.WriteLine("Magic Burst timer starting");
+                                    }
+                                    if (magicBurstTimer.IsRunning)
+                                    {
+                                        Console.WriteLine("Performing magic burst for log: " + skillchainLogText);
+                                        magicBurstSuccessful = PerformMagicBurstIfAvailable(skillchainLogText);
+                                        if (!magicBurstSuccessful ||
+                                        magicBurstTimer.ElapsedMilliseconds >= TimeSpan.FromSeconds(10).TotalMilliseconds)
+                                        {
+                                            magicBurstTimer.Reset();
+                                            skillchainLogText = null;
+                                            Console.WriteLine("Magic Burst timer stopped");
+                                        }
+                                    }
                                     BuffIfNecessary();
                                     HealHPIfNecessary();
                                     RemoveStatusEffectsIfNecessary();
-                                    UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                    if (skillchainTimer.IsRunning)
+                                    {
+                                        long elapsedSeconds = skillchainTimer.ElapsedMilliseconds;
+                                        if (elapsedSeconds >= TimeSpan.FromSeconds(5).TotalMilliseconds)
+                                        {
+                                            Console.WriteLine("Stopping Skillchain Timer");
+                                            skillchainTimer.Reset();
+                                        }
+                                        else if (elapsedSeconds >= TimeSpan.FromSeconds(2).TotalMilliseconds)
+                                        {
+                                            Console.WriteLine("Ending Darkness Skillchain - Performing Sinker Drill");
+                                            player.CastSpell((uint)BlueMagicSpellId.SinkerDrill, "<t>");
+                                            skillchainTimer.Reset();
+                                        }
+                                    }
+                                    if (player.MainJob == (byte)Job.BlueMage &&
+                                        player.TP >= WeaponSkillTP)
+                                    {
+                                        if (player.CanCastSpell((uint)BlueMagicSpellId.SinkerDrill) &&
+                                            player.PerformJobAbility((uint)JobAbilityId.ChainAffinity, "<me>"))
+                                        {
+                                            Console.WriteLine("Starting Darkness Skillchain - Performing Chant Du Cygne");
+                                            UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                            skillchainTimer.Start();
+                                        }
+                                        else
+                                        {
+                                            UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        UseWeaponSkillIfNecessary(WeaponSkillTP, WeaponSkillId);
+                                    }
                                 }
                             }
                             break;
                         case (uint)Status.Dead:
                         case (uint)Status.Dying:
+                            if (skillchainTimer.IsRunning)
+                            {
+                                skillchainTimer.Reset();
+                            }
+                            if (magicBurstTimer.IsRunning)
+                            {
+                                magicBurstTimer.Reset();
+                                skillchainLogText = null;
+                            }
                             Console.WriteLine(DateTime.Now + ": Player status: Dead");
                             player.DeathWarp();
                             Running = false; // Kill the bot, we're done.
@@ -265,6 +420,7 @@ namespace ExpBot.Scripts
                             Console.WriteLine("Undocumented Player Status: " + player.PlayerStatus);
                             break;
                     }
+                    Thread.Sleep(100);
                 }
             }
             catch (Exception e)
@@ -335,6 +491,10 @@ namespace ExpBot.Scripts
                         {
                             // Try again every second until we get to the actual location.
                             player.Stop();
+                            if (target.LockedOn)
+                            {
+                                player.UnLockOn(target);
+                            }
                             RunToLocation(location, distanceRadius);
                             return;
                         }
@@ -436,13 +596,112 @@ namespace ExpBot.Scripts
                 }
             }
         }
-        private void RestMPIfNecessary(int restMPP)
+        private bool PerformMagicBurstIfAvailable(string skillchainLogText)
         {
-            if (restMPP <= 0)
+            if (skillchainLogText == null || skillchainLogText.Length == 0)
+            {
+                return false;
+            }
+            else
+            {
+                if (skillchainLogText.Contains("Light") ||
+                    skillchainLogText.Contains("Fusion") ||
+                    skillchainLogText.Contains("Liquefaction"))
+                {
+                    if (player.CanCastSpell((uint)BlackMagicSpellId.FireII))
+                    {
+                        return player.CastSpell((uint)BlackMagicSpellId.FireII, "<t>");
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (skillchainLogText.Contains("Darkness") ||
+                    skillchainLogText.Contains("Distortion") ||
+                    skillchainLogText.Contains("Induration"))
+                {
+                    if (player.CanCastSpell((uint)BlackMagicSpellId.FireII))
+                    {
+                        return player.CastSpell((uint)BlackMagicSpellId.BlizzardII, "<t>");
+                    }
+                    else if (player.MainJob == (byte)Job.BlueMage)
+                    {
+
+                        if (player.PerformJobAbility((uint)JobAbilityId.BurstAffinity, "<me>"))
+                        {
+                            return player.CanCastSpell((uint)BlueMagicSpellId.IceBreak) &&
+                                player.CastSpell((uint)BlueMagicSpellId.IceBreak, "<t>");
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (skillchainLogText.Contains("Fragmentation") ||
+                    skillchainLogText.Contains("Impaction"))
+                {
+                    if (player.CanCastSpell((uint)BlackMagicSpellId.FireII))
+                    {
+                        return player.CastSpell((uint)BlackMagicSpellId.ThunderII, "<t>");
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (skillchainLogText.Contains("Gravitation") ||
+                    skillchainLogText.Contains("Scission"))
+                {
+                    if (player.CanCastSpell((uint)BlackMagicSpellId.FireII))
+                    {
+                        return player.CastSpell((uint)BlackMagicSpellId.StoneII, "<t>");
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (skillchainLogText.Contains("Reverberation"))
+                {
+                    if (player.CanCastSpell((uint)BlackMagicSpellId.FireII))
+                    {
+                        return player.CastSpell((uint)BlackMagicSpellId.WaterII, "<t>");
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (skillchainLogText.Contains("Detonation"))
+                {
+                    if (player.CanCastSpell((uint)BlackMagicSpellId.FireII))
+                    {
+                        return player.CastSpell((uint)BlackMagicSpellId.AeroII, "<t>");
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+        private void RestMPIfNecessary()
+        {
+            if (!IsRunningAndNotDeadOrAggroed() || RestMPP <= 0)
             {
                 return;
             }
-            if (player.MPP <= restMPP)
+            if (player.MPP <= RestMPP)
             {
                 if (target.Id != 0)
                 {
@@ -461,7 +720,7 @@ namespace ExpBot.Scripts
                     if (restMPPTimeout.ElapsedMilliseconds >= TimeSpan.FromSeconds(25.0).TotalMilliseconds &&
                         player.MP <= initialMP)
                     {
-                        RestMPIfNecessary(restMPP);
+                        RestMPIfNecessary();
                         return;
                     }
                     // 5 min timeout. Something gone wrong if it's still resting after 5mins.
@@ -476,7 +735,11 @@ namespace ExpBot.Scripts
         }
         private void UseCapPointExpPointEquipmentIfNecessary()
         {
-            if (IsRunningAndNotDeadOrAggroed() && (UseCapPointEquipment || UseExpPointEquipment))
+            if (!IsRunningAndNotDeadOrAggroed())
+            {
+                return;
+            }
+            if ((UseCapPointEquipment || UseExpPointEquipment))
             {
                 ItemId currentRing1ItemId = (ItemId)player.GetEquippedItem(SlotId.Ring1).Id;
                 if (UseCapPointEquipment && trizekRingReady)
@@ -509,7 +772,7 @@ namespace ExpBot.Scripts
                     }
                     player.EquipItem(SlotId.Ring1, currentRing1ItemId);
                 }
-                else if (UseExpPointEquipment && echadRingReady)
+                if (UseExpPointEquipment && echadRingReady)
                 {
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Dedication) ||
                         (party.IsPartyMemberPresent("Kupofried") &&
@@ -545,7 +808,7 @@ namespace ExpBot.Scripts
         }
         private void BuffIfNecessary()
         {
-            if (Running)
+            if (IsRunningAndNotDeadOrAggroed() || (Running && player.PlayerStatus == (uint)Status.InCombat))
             {
                 if (player.MainJob == (byte)Job.Geomancer ||
                     player.SubJob == (byte)Job.Geomancer)
@@ -577,7 +840,7 @@ namespace ExpBot.Scripts
         }
         private void RemoveStatusEffectsIfNecessary()
         {
-            if (Running)
+            if (IsRunningAndNotDeadOrAggroed() || (Running && player.PlayerStatus == (uint)Status.InCombat))
             {
                 if (((player.MainJob == (byte)Job.Dancer &&
                     player.MainJobLevel >= 35) ||
@@ -588,7 +851,8 @@ namespace ExpBot.Scripts
                     if (player.HasStatusEffect((short)APIConstants.StatusEffect.Silence) ||
                         player.HasStatusEffect((short)APIConstants.StatusEffect.Poison) ||
                         player.HasStatusEffect((short)APIConstants.StatusEffect.Gravity) ||
-                        player.HasStatusEffect((short)APIConstants.StatusEffect.Blind))
+                        player.HasStatusEffect((short)APIConstants.StatusEffect.Blind) ||
+                        player.HasStatusEffect((short)APIConstants.StatusEffect.Plague))
                     {
                         player.PerformJobAbility((uint)TPAbilityId.HealingWaltz, "<me>");
                     }
@@ -602,7 +866,7 @@ namespace ExpBot.Scripts
                 return;
             }
 
-            if (Running)
+            if (IsRunningAndNotDeadOrAggroed() || (Running && player.PlayerStatus == (uint)Status.InCombat))
             {
                 int partyMember = 0;
                 foreach (PartyMember member in party.PartyMembers)
@@ -695,7 +959,11 @@ namespace ExpBot.Scripts
         }
         private void SummonTrustsIfNecessary(IList<TrustSpellId> trusts)
         {
-            if (IsRunningAndNotDeadOrAggroed() && SummonTrusts)
+            if (!IsRunningAndNotDeadOrAggroed())
+            {
+                return;
+            }
+            if (SummonTrusts)
             {
                 if (trusts?.Count <= 0 || party.PartyMembers?.Count == 6)
                 {
@@ -751,7 +1019,7 @@ namespace ExpBot.Scripts
             {
                 try
                 {
-                    if (player.GetAggroedTargetId() > 0)
+                    if ((aggroedTargetId = player.GetAggroedTargetId()) > 0)
                     {
                         aggroed = true;
                     }
@@ -904,6 +1172,11 @@ namespace ExpBot.Scripts
         {
             get => pullSearchRadius;
             set => pullSearchRadius = value;
+        }
+        public float PullDelay
+        {
+            get => pullDelay;
+            set => pullDelay = value;
         }
         public float IdleRadius
         {

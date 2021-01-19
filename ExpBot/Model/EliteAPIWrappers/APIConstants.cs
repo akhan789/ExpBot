@@ -154,7 +154,8 @@
             AccuracyBoost = 553,
             Commitment = 579,
             Flurry = 581,
-            ColureActive = 612
+            ColureActive = 612,
+            EmporoxsGift = 618
         }
         #endregion
         #region Player/Monster Status

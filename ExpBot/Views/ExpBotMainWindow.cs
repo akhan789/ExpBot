@@ -69,6 +69,7 @@ namespace ExpBot.Views
             //model.SelectedTrustList = ;
             model.PullDistance = Convert.ToDouble(numPullDistance.Value);
             model.PullSearchRadius = Convert.ToSingle(numPullSearchRadius.Value);
+            model.PullDelay = Convert.ToSingle(numPullDelay.Value);
             model.MeleeRange = Convert.ToDouble(numMeleeRange.Value);
             model.RestMPP = Convert.ToInt32(numRestMPP.Value);
             model.IdleRadius = Convert.ToSingle(numIdleRadius.Value);
@@ -256,6 +257,10 @@ namespace ExpBot.Views
         private void numPullSearchRadius_ValueChanged(object sender, EventArgs e)
         {
             model.PullSearchRadius = Convert.ToSingle(numPullSearchRadius.Value);
+        }
+        private void numPullDelay_ValueChanged(object sender, EventArgs e)
+        {
+            model.PullDelay = Convert.ToSingle(numPullDelay.Value);
         }
         private void numMeleeRange_ValueChanged(object sender, EventArgs e)
         {

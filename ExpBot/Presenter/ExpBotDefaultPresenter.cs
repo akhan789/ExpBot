@@ -54,6 +54,7 @@ namespace ExpBot.ViewModel
                 ((IExpScript)script).TrustNames = model.SelectedTrustList;
                 ((IExpScript)script).PullDistance = model.PullDistance;
                 ((IExpScript)script).PullSearchRadius = model.PullSearchRadius;
+                ((IExpScript)script).PullDelay = model.PullDelay;
                 ((IExpScript)script).MeleeRange = model.MeleeRange;
                 ((IExpScript)script).RestMPP = model.RestMPP;
                 ((IExpScript)script).IdleRadius = model.IdleRadius;

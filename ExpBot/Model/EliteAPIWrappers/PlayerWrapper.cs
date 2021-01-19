@@ -60,28 +60,27 @@ namespace ExpBot.Model.EliteAPIWrappers
                     break;
             }
         }
-
-        //public string GetChatLog()
-        //{
-        //    ChatEntry chatEntry = api.Chat.GetNextChatLine();
-        //    if (chatEntry != null)
-        //    {
-        //        Console.WriteLine("Timestamp: " + chatEntry.Timestamp);
-        //        Console.WriteLine("ChatColor: " + chatEntry.ChatColor);
-        //        Console.WriteLine("ChatType: " + chatEntry.ChatType);
-        //        Console.WriteLine("Index1: " + chatEntry.Index1);
-        //        Console.WriteLine("Index2: " + chatEntry.Index2);
-        //        Console.WriteLine("Length: " + chatEntry.Length);
-        //        Console.WriteLine("RawLine: " + chatEntry.RawLine);
-        //        Console.WriteLine("RawText: " + chatEntry.RawText);
-        //        Console.WriteLine("         Text: " + chatEntry.Text);
-        //        return chatEntry.Text;
-        //    }
-        //    else
-        //    {
-        //        return "";
-        //    }
-        //}
+        public string GetChatLog()
+        {
+            ChatEntry chatEntry = api.Chat.GetNextChatLine();
+            if (chatEntry != null)
+            {
+                //Console.WriteLine("Timestamp: " + chatEntry.Timestamp);
+                //Console.WriteLine("ChatColor: " + chatEntry.ChatColor);
+                //Console.WriteLine("ChatType: " + chatEntry.ChatType);
+                //Console.WriteLine("Index1: " + chatEntry.Index1);
+                //Console.WriteLine("Index2: " + chatEntry.Index2);
+                //Console.WriteLine("Length: " + chatEntry.Length);
+                //Console.WriteLine("RawLine: " + chatEntry.RawLine);
+                //Console.WriteLine("RawText: " + chatEntry.RawText);
+                //Console.WriteLine("         Text: " + chatEntry.Text);
+                return chatEntry.Text;
+            }
+            else
+            {
+                return "";
+            }
+        }
         public void Attack(TargetWrapper target)
         {
             FaceTarget(target.X, target.Z);
@@ -89,11 +88,18 @@ namespace ExpBot.Model.EliteAPIWrappers
             {
                 LockOn(target);
             }
-            if (PlayerStatus != (uint)Status.InCombat)
+            Stopwatch attackTimeoutWatch = new Stopwatch();
+            attackTimeoutWatch.Start();
+            while (PlayerStatus != (uint)Status.InCombat)
             {
                 api.ThirdParty.SendString("/attack");
+                if (attackTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(5).TotalMilliseconds)
+                {
+                    SetTarget(0);
+                    break;
+                }
+                Thread.Sleep(2500);
             }
-            Thread.Sleep(2500);
         }
         public void LockOn(TargetWrapper target)
         {
@@ -110,13 +116,20 @@ namespace ExpBot.Model.EliteAPIWrappers
                 }
             }
         }
-        public void UnLockOn(TargetWrapper target)
+        public bool UnLockOn(TargetWrapper target)
         {
+            Stopwatch unLockOnTimeoutWatch = new Stopwatch();
+            unLockOnTimeoutWatch.Start();
             while (target.LockedOn)
             {
                 api.ThirdParty.SendString("/lockon <t>");
-                Thread.Sleep(500);
+                if (unLockOnTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(2).TotalMilliseconds)
+                {
+                    return false;
+                }
+                Thread.Sleep(750);
             }
+            return true;
         }
         public void Heal()
         {
@@ -382,7 +395,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             spellTimeoutWatch.Start();
             while (GetSpellRecastRemaining((int)spellId) <= 0)
             {
-                Thread.Sleep(250);
+                Thread.Sleep(100);
                 ChatEntry chatEntry = api.Chat.GetNextChatLine();
                 if (chatEntry != null && chatEntry.Text.Contains(Name + "'s casting is interrupted.") || spellTimeoutWatch.ElapsedMilliseconds >= TimeSpan.FromSeconds(castTime).TotalMilliseconds)
                 {
@@ -390,7 +403,6 @@ namespace ExpBot.Model.EliteAPIWrappers
                     return false;
                 }
             }
-            // TODO: Animation Delay - Configurable?
             Thread.Sleep(2600);
             Casting = false;
             return true;
@@ -421,16 +433,25 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             return 0;
         }
-        public void PerformJobAbility(uint jobAbilityId, string target)
+        public bool CanPerformJobAbility(uint jobAbilityId)
         {
-            IAbility ability = api.Resources.GetAbility(jobAbilityId);
-            if (ability != null &&
-                HasAbility(jobAbilityId) &&
-                GetAbilityRecast(ability.TimerID) == 0)
+            return HasAbility(jobAbilityId) &&
+                GetAbilityRecast(api.Resources.GetAbility(jobAbilityId).TimerID) == 0;
+        }
+        public bool PerformJobAbility(uint jobAbilityId, string target)
+        {
+            IAbility ability;
+            if ((ability = api.Resources.GetAbility(jobAbilityId)) != null &&
+                CanPerformJobAbility(jobAbilityId))
             {
                 api.ThirdParty.SendString("/ja \"" + ability.Name[0] + "\" " + target);
                 // TODO: Animation Delay - Configurable?
                 Thread.Sleep(2500);
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
         public void PerformWeaponSkill(TPAbilityId weaponSkillId, string target)
@@ -438,7 +459,7 @@ namespace ExpBot.Model.EliteAPIWrappers
             IAbility weaponSkill = api.Resources.GetAbility((uint)weaponSkillId);
             api.ThirdParty.SendString("/ws \"" + weaponSkill.Name[0] + "\" " + target);
             // TODO: Animation Delay - Configurable?
-            Thread.Sleep(2500);
+            Thread.Sleep(1000);
         }
         public void Move(float locationX, float locationY, float locationZ)
         {
