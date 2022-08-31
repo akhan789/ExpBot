@@ -19,6 +19,7 @@ namespace ExpBot.Model
         private Process currentPOLProcess;
         private IList<Process> currentProcesses;
         private IScript script;
+        private bool chaseTarget;
         private bool keepWithinMeleeRange;
         private bool restMP;
         private bool useWeaponSkill;
@@ -28,6 +29,7 @@ namespace ExpBot.Model
         private bool useExpPointEquipment;
         private bool useAutoHeal;
         private bool pullWithSpell;
+        private bool pullWithProvoke;
         private IList<string> selectedTargetList;
         private IList<string> trustList;
         private int restMPP;
@@ -66,14 +68,7 @@ namespace ExpBot.Model
         {
             if (CurrentPOLProcess != null)
             {
-                if (api == null)
-                {
-                    api = new EliteAPI(CurrentPOLProcess.Id);
-                }
-                else
-                {
-                    api.Reinitialize(CurrentPOLProcess.Id);
-                }
+                api = new EliteAPI(CurrentPOLProcess.Id);
                 api.ThirdParty.SendString("//lua load ScriptedExtender");
                 Player = new PlayerWrapper(api);
                 Target = new TargetWrapper(api);
@@ -103,6 +98,11 @@ namespace ExpBot.Model
         {
             get => trustList;
             set => trustList = value;
+        }
+        public bool ChaseTarget
+        {
+            get => chaseTarget;
+            set => chaseTarget = value;
         }
         public bool KeepWithinMeleeRange
         {
@@ -148,6 +148,11 @@ namespace ExpBot.Model
         {
             get => pullWithSpell;
             set => pullWithSpell = value;
+        }
+        public bool PullWithProvoke
+        {
+            get => pullWithProvoke;
+            set => pullWithProvoke = value;
         }
         public int RestMPP
         {

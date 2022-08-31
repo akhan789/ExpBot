@@ -1,5 +1,6 @@
 ﻿using EliteMMO.API;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -88,11 +89,55 @@ namespace ExpBot.Model.EliteAPIWrappers
             get => api.Party.GetPartyMember(5);
             set => SetParty("PartyMember", value);
         }
+        public uint GetAggroedTargetId()
+        {
+            XiEntity entity = null;
+            for (int x = 0; x < 2048; x++)
+            {
+                entity = api.Entity.GetEntity(x);
+                if (entity.WarpPointer == 0 ||
+                    entity.HealthPercent == 0 ||
+                    entity.TargetID <= 0 ||
+                    (!new BitArray(new int[] { entity.SpawnFlags }).Get(4)))
+                {
+                    entity = null;
+                    continue;
+                }
+                // Unfortunately it's not straight-forward to find out
+                // if a monster is targetting the player.
+                if (entity.ClaimID == 0 &&
+                        entity.HealthPercent != 0 &&
+                        entity.Distance <= 7 &&
+                        entity.Status == (uint)Status.InCombat)
+                {
+                    break;
+                }
+            }
+            if (entity != null)
+            {
+                return entity.TargetID;
+            }
+            else
+            {
+                return 0;
+            }
+        }
         public bool IsPartyMemberPresent(string partyMemberName)
         {
             foreach (PartyMember member in PartyMembers)
             {
                 if (member.Name[0].Equals(partyMemberName))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool PartyMemberIDMatches(uint id)
+        {
+            foreach (PartyMember member in PartyMembers)
+            {
+                if (member.ID.Equals(id))
                 {
                     return true;
                 }

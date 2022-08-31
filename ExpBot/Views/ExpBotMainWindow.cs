@@ -21,7 +21,6 @@ namespace ExpBot.Views
         public ExpBotMainWindow()
         {
             InitializeComponent();
-            ExpBotTextBoxLogAppender.ConfigureExpBotTextBoxLogAppender(txtConsole);
             model = new ExpBotDefaultModel();
             presenter = new ExpBotDefaultPresenter(this, model);
         }
@@ -48,14 +47,15 @@ namespace ExpBot.Views
         }
         private void cboProcesses_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (!presenter.Initialised)
-            {
+            //if (!presenter.Initialised)
+            //{
                 presenter.Initialise((Process)cboProcesses.SelectedItem);
-            }
+            //}
         }
         private void btnStart_Click(object sender, EventArgs e)
         {
             log.Info("ExpBotMainWindow: Starting Exp Bot");
+            model.ChaseTarget = chkChasePull.Checked;
             model.KeepWithinMeleeRange = chkMeleeRange.Checked;
             model.RestMP = chkRestMPP.Checked;
             model.UseWeaponSkill = chkUseWSTP.Checked;
@@ -151,6 +151,17 @@ namespace ExpBot.Views
             lstTrustSelections.SelectedItems.Clear();
             lstTrustSelections.Enabled = true;
         }
+        private void chkChasePull_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkChasePull.Checked)
+            {
+                model.ChaseTarget = true;
+            }
+            else
+            {
+                model.ChaseTarget = false;
+            }
+        }
         private void chkMeleeRange_CheckedChanged(object sender, EventArgs e)
         {
             if (chkMeleeRange.Checked)
@@ -241,13 +252,24 @@ namespace ExpBot.Views
         }
         private void chkPullWithBlackMagicSpell_CheckedChanged(object sender, EventArgs e)
         {
-            if (chkUseExpPointEquip.Checked)
+            if (chkPullWithBlackMagicSpell.Checked)
             {
                 model.PullWithSpell = true;
             }
             else
             {
                 model.PullWithSpell = false;
+            }
+        }
+        private void chkPullWithProvoke_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chkPullWithProvoke.Checked)
+            {
+                model.PullWithProvoke = true;
+            }
+            else
+            {
+                model.PullWithProvoke = false;
             }
         }
         private void numPullDistance_ValueChanged(object sender, EventArgs e)

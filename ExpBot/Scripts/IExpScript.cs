@@ -8,6 +8,7 @@ namespace ExpBot.Scripts
 {
     public interface IExpScript : IScript
     {
+        bool ChaseTarget { get; set; }
         bool KeepWithinMeleeRange { get; set; }
         bool RestMP { get; set; }
         bool UseWeaponSkill { get; set; }
@@ -16,6 +17,7 @@ namespace ExpBot.Scripts
         bool UseExpPointEquipment { get; set; }
         bool UseAutoHeal { get; set; }
         bool PullWithSpell { get; set; }
+        bool PullWithProvoke { get; set; }
         IList<string> TargetNames { get; set; }
         IList<string> TrustNames { get; set; }
         BlackMagicSpellId PullBlackMagicSpellId { get; set; }

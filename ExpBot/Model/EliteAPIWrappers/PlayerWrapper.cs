@@ -16,6 +16,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         private bool moving;
         private bool pulling;
         private bool casting;
+
         public PlayerWrapper(EliteAPI api)
         {
             PlayerWrapper.api = api;
@@ -88,6 +89,11 @@ namespace ExpBot.Model.EliteAPIWrappers
             {
                 LockOn(target);
             }
+            if(target.Entity.ClaimID != 0 && target.Entity.ClaimID != ServerID)
+            {
+                return;
+            }
+
             Stopwatch attackTimeoutWatch = new Stopwatch();
             attackTimeoutWatch.Start();
             while (PlayerStatus != (uint)Status.InCombat)
@@ -158,40 +164,6 @@ namespace ExpBot.Model.EliteAPIWrappers
             }
             double radian = (((float)angle) / 255) * 2 * Math.PI;
             api.Entity.SetEntityHPosition(api.Entity.LocalPlayerIndex, (float)radian);
-        }
-        public uint GetAggroedTargetId()
-        {
-            XiEntity entity = null;
-            for (int x = 0; x < 2048; x++)
-            {
-                entity = api.Entity.GetEntity(x);
-                if (entity.WarpPointer == 0 ||
-                    entity.HealthPercent == 0 ||
-                    entity.TargetID <= 0 ||
-                    (!new BitArray(new int[] { entity.SpawnFlags }).Get(4)) ||
-                    entity.ClaimID != 0)
-                {
-                    entity = null;
-                    continue;
-                }
-
-                // Unfortunately it's not straight-forward to find out
-                // if a monster is targetting the player.
-                if (entity.HealthPercent != 0 &&
-                    entity.Distance <= 25 &&
-                    entity.Status == (uint)Status.InCombat)
-                {
-                    break;
-                }
-            }
-            if (entity != null)
-            {
-                return entity.TargetID;
-            }
-            else
-            {
-                return 0;
-            }
         }
         public IList<string> GetAllAvailableTargets()
         {
@@ -369,8 +341,11 @@ namespace ExpBot.Model.EliteAPIWrappers
             {
                 if (HasTrustSpell(trust))
                 {
-                    ISpell spell = api.Resources.GetSpell((uint)trust);
-                    trustList.Add(spell.Name[0]);
+                    ISpell spell;
+                    if ((spell = api.Resources.GetSpell((uint)trust)) != null)
+                    {
+                        trustList.Add(spell.Name[0]);
+                    }
                 }
             }
             ((List<string>)trustList).Sort();
@@ -411,6 +386,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             Thread.Sleep(1000);
             api.ThirdParty.SendString("/ra <t>");
+            Thread.Sleep(1000);
         }
         public int GetTPAbilityRecast(TPAbilityId tpAbilityId)
         {
@@ -710,7 +686,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         public bool HasWeaponSkill(TPAbilityId id)
         {
             IAbility ability = api.Resources.GetAbility((uint)id);
-            return ability.TimerID == 900 && api.Player.HasWeaponSkill(ability.ID);
+            return ability?.TimerID == 900 && api.Player.HasWeaponSkill(ability.ID);
         }
         public bool HasJobAbility(JobAbilityId id)
         {
@@ -741,6 +717,11 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             get => api.Player.ServerId;
             set => SetPlayer("ServerId", value);
+        }
+        public uint ServerID
+        {
+            get => api.Player.ServerID;
+            set => SetPlayer("ServerID", value);
         }
         public byte MainJob
         {
@@ -861,6 +842,7 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             uint id = 0;
             int serverId = 0;
+            uint serverID = 0;
             int job = 0;
             int subJob = 0;
             string name = "";
@@ -893,6 +875,11 @@ namespace ExpBot.Model.EliteAPIWrappers
                 {
                     serverId = ServerId;
                     OnPropertyChanged("ServerId");
+                }
+                if (serverID != ServerID)
+                {
+                    serverID = ServerID;
+                    OnPropertyChanged("ServerID");
                 }
                 if (job != MainJob)
                 {

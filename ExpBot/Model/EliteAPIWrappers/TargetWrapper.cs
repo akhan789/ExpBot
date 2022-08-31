@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using static EliteMMO.API.EliteAPI;
 
 namespace ExpBot.Model.EliteAPIWrappers
 {
@@ -59,6 +60,11 @@ namespace ExpBot.Model.EliteAPIWrappers
         {
             get => api.Target.GetTargetInfo().TargetIndex;
             set => SetTarget("TargetIndex", value);
+        }
+        public XiEntity Entity
+        {
+            get => api.Entity.GetEntity((int)api.Target.GetTargetInfo().TargetIndex);
+            set => SetTarget("Entity", value);
         }
         public uint EntryPointer
         {

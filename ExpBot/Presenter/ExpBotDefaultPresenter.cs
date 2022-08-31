@@ -42,6 +42,7 @@ namespace ExpBot.ViewModel
                 script = model.Script = new ExpScript(model.Player, model.Target, model.Party);
                 script.PropertyChanged += Script_PropertyChanged;
                 script.Running = true;
+                ((IExpScript)script).ChaseTarget = model.ChaseTarget;
                 ((IExpScript)script).KeepWithinMeleeRange = model.KeepWithinMeleeRange;
                 ((IExpScript)script).RestMP = model.RestMP;
                 ((IExpScript)script).UseWeaponSkill = model.UseWeaponSkill;
@@ -50,6 +51,7 @@ namespace ExpBot.ViewModel
                 ((IExpScript)script).UseExpPointEquipment = model.UseExpPointEquipment;
                 ((IExpScript)script).UseAutoHeal = model.UseAutoHeal;
                 ((IExpScript)script).PullWithSpell = model.PullWithSpell;
+                ((IExpScript)script).PullWithProvoke = model.PullWithProvoke;
                 ((IExpScript)script).TargetNames = model.SelectedTargetList;
                 ((IExpScript)script).TrustNames = model.SelectedTrustList;
                 ((IExpScript)script).PullDistance = model.PullDistance;
@@ -110,7 +112,7 @@ namespace ExpBot.ViewModel
         {
             try
             {
-                if (model.CurrentPOLProcess?.Id != process.Id)
+                if (model?.CurrentPOLProcess?.Id != process?.Id)
                 {
                     model.CurrentPOLProcess = process;
                     Initialised = true;

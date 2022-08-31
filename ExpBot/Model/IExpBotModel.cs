@@ -15,6 +15,7 @@ namespace ExpBot.Model
         Process CurrentPOLProcess { get; set; }
         void Unload();
         IScript Script { get; set; }
+        bool ChaseTarget { get; set; }
         bool KeepWithinMeleeRange { get; set; }
         bool RestMP { get; set; }
         bool UseWeaponSkill { get; set; }
@@ -24,6 +25,7 @@ namespace ExpBot.Model
         bool UseExpPointEquipment { get; set; }
         bool UseAutoHeal { get; set; }
         bool PullWithSpell { get; set; }
+        bool PullWithProvoke { get; set; }
         int RestMPP { get; set; }
         TPAbilityId WeaponSkillId { get; set; }
         BlackMagicSpellId PullBlackMagicSpellId { get; set; }
