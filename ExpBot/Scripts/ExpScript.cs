@@ -206,7 +206,7 @@ namespace ExpBot.Scripts
                                                 }
                                             }
                                         }
-                                        if (PullWithProvoke)
+                                        else if (PullWithProvoke)
                                         {
                                             player.PerformJobAbility((uint)JobAbilityId.Provoke, "<t>");
                                             pullTimeoutWatch.Start();
