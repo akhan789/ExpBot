@@ -868,7 +868,7 @@ namespace ExpBot.Scripts
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Haste) &&
                         player.CanCastSpell((uint)WhiteMagicSpellId.HasteII))
                     {
-                        player.CastSpell((uint)WhiteMagicSpellId.RefreshIII, "<me>");
+                        player.CastSpell((uint)WhiteMagicSpellId.HasteII, "<me>");
                     }
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Stoneskin) &&
                         player.CanCastSpell((uint)WhiteMagicSpellId.Stoneskin))
