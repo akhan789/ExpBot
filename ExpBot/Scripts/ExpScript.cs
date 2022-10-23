@@ -854,6 +854,48 @@ namespace ExpBot.Scripts
                         player.CastSpell((uint)GeomancySpellId.IndiPrecision, "<me>");
                     }
                 }
+                if (player.MainJob == (byte)Job.RedMage && player.MainJobLevel >= 99)
+                {
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Composure))
+                    {
+                        player.PerformJobAbility((uint)JobAbilityId.Composure, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Refresh) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.RefreshIII))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.RefreshIII, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Haste) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.HasteII))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.RefreshIII, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Stoneskin) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Stoneskin))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.Stoneskin, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Blink) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Blink))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.Blink, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Aquaveil) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Aquaveil))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.Aquaveil, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Enthunder) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Enthunder))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.Enthunder, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Temper) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.TemperII))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.TemperII, "<me>");
+                    }
+                }
                 if (((player.MainJob == (byte)Job.Dancer &&
                     player.MainJobLevel >= 45) ||
                     (player.SubJob == (byte)Job.Dancer &&

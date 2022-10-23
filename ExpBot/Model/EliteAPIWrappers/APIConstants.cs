@@ -150,6 +150,8 @@
             CorsairsRoll = 326,
             HasteSamba = 370,
             MEVADown = 404,
+            Composure = 419,
+            Temper = 432,
             IndiRefresh = 541,
             AccuracyBoost = 553,
             Commitment = 579,
