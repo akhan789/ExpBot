@@ -114,6 +114,7 @@
             Barpetrify = 111,
             Barvirus = 112,
             Phalanx = 116,
+            GainMND = 124,
             Burn = 128,
             Frost = 129,
             Choke = 130,

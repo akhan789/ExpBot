@@ -865,10 +865,35 @@ namespace ExpBot.Scripts
                     {
                         player.CastSpell((uint)WhiteMagicSpellId.RefreshIII, "<me>");
                     }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Regen) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.RegenII))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.RegenII, "<me>");
+                    }
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Haste) &&
                         player.CanCastSpell((uint)WhiteMagicSpellId.HasteII))
                     {
                         player.CastSpell((uint)WhiteMagicSpellId.HasteII, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Enthunder) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Enthunder))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.Enthunder, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Temper) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.TemperII))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.TemperII, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.GainMND) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.GainMND))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.GainMND, "<me>");
+                    }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.IceSpikes) &&
+                        player.CanCastSpell((uint)BlackMagicSpellId.IceSpikes))
+                    {
+                        player.CastSpell((uint)BlackMagicSpellId.IceSpikes, "<me>");
                     }
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Stoneskin) &&
                         player.CanCastSpell((uint)WhiteMagicSpellId.Stoneskin))
@@ -880,20 +905,25 @@ namespace ExpBot.Scripts
                     {
                         player.CastSpell((uint)WhiteMagicSpellId.Blink, "<me>");
                     }
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Phalanx) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Phalanx))
+                    {
+                        player.CastSpell((uint)WhiteMagicSpellId.Phalanx, "<me>");
+                    }
                     if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Aquaveil) &&
                         player.CanCastSpell((uint)WhiteMagicSpellId.Aquaveil))
                     {
                         player.CastSpell((uint)WhiteMagicSpellId.Aquaveil, "<me>");
                     }
-                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Enthunder) &&
-                        player.CanCastSpell((uint)WhiteMagicSpellId.Enthunder))
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Barfire) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Barfire))
                     {
-                        player.CastSpell((uint)WhiteMagicSpellId.Enthunder, "<me>");
+                        player.CastSpell((uint)WhiteMagicSpellId.Barfire, "<me>");
                     }
-                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Temper) &&
-                        player.CanCastSpell((uint)WhiteMagicSpellId.TemperII))
+                    if (!player.HasStatusEffect((short)APIConstants.StatusEffect.Barparalyze) &&
+                        player.CanCastSpell((uint)WhiteMagicSpellId.Barparalyze))
                     {
-                        player.CastSpell((uint)WhiteMagicSpellId.TemperII, "<me>");
+                        player.CastSpell((uint)WhiteMagicSpellId.Barparalyze, "<me>");
                     }
                 }
                 if (((player.MainJob == (byte)Job.Dancer &&
